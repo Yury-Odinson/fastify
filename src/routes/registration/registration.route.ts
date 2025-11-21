@@ -1,15 +1,9 @@
 import type { FastifyInstance } from "fastify";
 import { userService } from "../../user/index.js";
-
-type RegistrationBody = {
-	name: string;
-	email: string;
-	password: string;
-	lang?: string;
-};
+import type { CreateUserDTO } from "../../types/DTO.js";
 
 export const registrationUserRoutes = (app: FastifyInstance) => {
-	app.post<{ Body: RegistrationBody }>("/api/registration", async (request) => {
+	app.post<{ Body: CreateUserDTO }>("/api/registration", async (request) => {
 
 		await userService.createUser(request.body);
 

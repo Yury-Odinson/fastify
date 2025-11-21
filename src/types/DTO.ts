@@ -1,8 +1,8 @@
-type UserDTO = {
+export type UserDTO = {
 	id: string;
 	name: string;
 	email: string;
-	lang: string;
+	lang: "en" | "ru";
 };
 
 export type UserListDTO = {
@@ -11,3 +11,10 @@ export type UserListDTO = {
 	currentPage: number;
 	totalPages: number;
 }
+
+export type CreateUserDTO = {
+	name: string;
+	email: string;
+	password: string;
+	lang: "en" | "ru";
+};

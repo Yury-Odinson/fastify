@@ -6,15 +6,16 @@ export const users = pgTable("users", {
 	name: text("name").notNull(),
 	email: text("email").notNull().unique(),
 	password: text("password").notNull(),
-	avatar: text("avatar").default(""),
-	isAdmin: boolean("is_admin").default(false),
-	isPremium: boolean("is_premium").default(false),
-	lang: text("lang").default("en")
+	lang: text("lang").default("en"),
+	createdAt: timestamp("created_at", { withTimezone: true }).default(sql`now()`),
+	updatedAt: timestamp("updated_at", { withTimezone: true }).default(sql`now()`),
 });
 
 export const moods = pgTable("moods", {
 	id: serial("id").primaryKey(),
-	name: text("name").notNull()
+	name: text("name").notNull(),
+	createdAt: timestamp("created_at", { withTimezone: true }).default(sql`now()`),
+	updatedAt: timestamp("updated_at", { withTimezone: true }).default(sql`now()`),
 });
 
 export const userMoods = pgTable("user_moods", {

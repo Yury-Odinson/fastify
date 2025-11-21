@@ -1,5 +1,5 @@
 import { userRepository } from "../db/index.js";
-import type { User } from "../types/dbTypes.js";
+import type { CreateUserDTO } from "../types/DTO.js";
 
 class UserService {
 	constructor(private readonly repository = userRepository) { }
@@ -8,10 +8,8 @@ class UserService {
 		return this.repository.getUsers({page, limit});
 	}
 
-	async createUser(userData: User): Promise<void> {
-
+	async createUser(userData: CreateUserDTO): Promise<void> {
 		await this.repository.createUser(userData);
-
 	}
 }
 

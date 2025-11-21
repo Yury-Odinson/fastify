@@ -3,7 +3,7 @@ import { drizzle } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
 import { users } from "./schema.js";
 import { sql } from "drizzle-orm";
-import type { User } from "../types/dbTypes.js";
+import type { CreateUserData } from "../types/dbTypes.js";
 
 const pool = new Pool({
 	connectionString: process.env.DATABASE_URL,
@@ -42,7 +42,7 @@ class UserRepository {
 		}
 	}
 
-	async createUser(userData: User): Promise<void> {
+	async createUser(userData: CreateUserData): Promise<void> {
 		try {
 			await this.dbClient
 				.insert(users)
