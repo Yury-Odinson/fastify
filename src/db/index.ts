@@ -3,6 +3,7 @@ import { drizzle } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
 import { users } from "./schema.js";
 import { sql } from "drizzle-orm";
+import type { User } from "../types/dbTypes.js";
 
 const pool = new Pool({
 	connectionString: process.env.DATABASE_URL,
@@ -23,7 +24,7 @@ class UserRepository {
 			const count = countResult[0]?.count ?? 0;
 
 			const data = await this.dbClient
-				.select()
+				.select({ id: users.id, name: users.name, email: users.email, lang: users.lang })
 				.from(users)
 				.limit(limit)
 				.offset(offset)
@@ -38,6 +39,23 @@ class UserRepository {
 		} catch (error) {
 			console.error("Error fetching users:", error);
 			throw new Error("Failed to fetch users");
+		}
+	}
+
+	async createUser(userData: User): Promise<void> {
+		try {
+			await this.dbClient
+				.insert(users)
+				.values({
+					name: userData.name,
+					email: userData.email,
+					password: userData.password,
+					lang: userData.lang
+				})
+				.returning({ name: users.name });
+		} catch (error) {
+			console.error("Error creating user:", error);
+			throw new Error("Failed to create user");
 		}
 	}
 }
