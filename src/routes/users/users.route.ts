@@ -6,7 +6,7 @@ type GetUsersQuery = {
 	limit?: number;
 };
 
-export const registerGetUsersRoutes = (app: FastifyInstance) => {
+export const registerUsersRoutes = (app: FastifyInstance) => {
 	app.get<{ Querystring: GetUsersQuery }>("/api/getUsers", async (request) => {
 		const {
 			page: requestedPage = 1,
