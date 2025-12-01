@@ -1,32 +1,39 @@
+import argon2 from "argon2";
 import { userRepository } from "../db/index.js";
 import type { CreateUserDTO } from "../types/DTO.js";
 
 class UserService {
 	constructor(private readonly repository = userRepository) { }
 
-	async getUsers(page: number, limit: number) {
-		return this.repository.getUsers({page, limit});
+	getUsers(page: number, limit: number) {
+		try {
+			return this.repository.getUsers({ page, limit });
+		} catch (error) {
+			console.error("Error in UserService getUsers:", error);
+			throw new Error("Failed to get users in service layer");
+		}
 	}
 
 	async createUser(userData: CreateUserDTO): Promise<void> {
+		const password = await this.hashPassword(userData.password);
 
-		const hashedPassword = await this.hashPassword(userData.password);
-
-		return this.repository.createUser({
-			...userData,
-			password: hashedPassword
-		});
+		try {
+			return this.repository.createUser({
+				...userData,
+				password,
+			});
+		} catch (error) {
+			console.error("Error in UserService createUser:", error);
+			throw new Error("Failed to create user in service layer");
+		}
 	}
 
 	private async hashPassword(password: string): Promise<string> {
-		
-		const argon2 = require("argon2");
 
 		try {
-			console.log("Hashing password...", argon2.hash(password));
 			return await argon2.hash(password);
-		} catch (err) {
-			console.error("Error hashing password:", err);
+		} catch (error) {
+			console.error("Error hashing password:", error);
 			throw new Error("Failed to hash password");
 		}
 	}
