@@ -29,7 +29,6 @@ class UserService {
 	}
 
 	private async hashPassword(password: string): Promise<string> {
-
 		try {
 			return await argon2.hash(password);
 		} catch (error) {
