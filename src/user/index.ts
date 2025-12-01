@@ -28,6 +28,20 @@ class UserService {
 		}
 	}
 
+	async authenticateUser(email: string, password: string) {
+		const user = await this.repository.findByEmail(email);
+		if (!user) {
+			throw new Error("User not found");
+		}
+
+		const isPasswordValid = await argon2.verify(user.password, password);
+		if (!isPasswordValid) {
+			throw new Error("Invalid password");
+		}
+
+		return user;
+	}
+
 	private async hashPassword(password: string): Promise<string> {
 		try {
 			return await argon2.hash(password);

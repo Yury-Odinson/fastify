@@ -2,7 +2,7 @@ import "dotenv/config";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
 import { users } from "./schema.js";
-import { sql } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import type { CreateUserData } from "../types/dbTypes.js";
 
 const pool = new Pool({
@@ -52,10 +52,19 @@ class UserRepository {
 					password: userData.password,
 					lang: userData.lang
 				})
-				.returning({ name: users.name });
 		} catch (error) {
 			console.error("Error creating user:", error);
 			throw new Error("Failed to create user");
+		}
+	}
+
+	async findByEmail(email: string) {
+		try {
+			const [user] = await this.dbClient.select().from(users).where(eq(users.email, email)).limit(1);
+			return user;
+		} catch (error) {
+			console.error("Error finding user by email:", error);
+			throw new Error("Failed to find user by email");
 		}
 	}
 }

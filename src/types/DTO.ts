@@ -18,3 +18,8 @@ export type CreateUserDTO = {
 	password: string;
 	lang: "en" | "ru";
 };
+
+export type AuthenticateUserDTO = {
+	email: string;
+	password: string;
+};
