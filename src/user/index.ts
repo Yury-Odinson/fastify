@@ -9,7 +9,26 @@ class UserService {
 	}
 
 	async createUser(userData: CreateUserDTO): Promise<void> {
-		await this.repository.createUser(userData);
+
+		const hashedPassword = await this.hashPassword(userData.password);
+
+		return this.repository.createUser({
+			...userData,
+			password: hashedPassword
+		});
+	}
+
+	private async hashPassword(password: string): Promise<string> {
+		
+		const argon2 = require("argon2");
+
+		try {
+			console.log("Hashing password...", argon2.hash(password));
+			return await argon2.hash(password);
+		} catch (err) {
+			console.error("Error hashing password:", err);
+			throw new Error("Failed to hash password");
+		}
 	}
 }
 
