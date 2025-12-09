@@ -31,15 +31,16 @@ class UserService {
 	async authenticateUser(email: string, password: string) {
 		const user = await this.repository.findByEmail(email);
 		if (!user) {
-			throw new Error("User not found");
+			throw new Error("Invalid credentials");
 		}
 
 		const isPasswordValid = await argon2.verify(user.password, password);
 		if (!isPasswordValid) {
-			throw new Error("Invalid password");
+			throw new Error("Invalid credentials");
 		}
 
-		return user;
+		const { password: _password, ...safeUser } = user;
+		return safeUser;
 	}
 
 	private async hashPassword(password: string): Promise<string> {

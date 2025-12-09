@@ -1,7 +1,7 @@
 import "dotenv/config";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
-import { users } from "./schema.js";
+import { refreshTokens, users } from "./schema.js";
 import { eq, sql } from "drizzle-orm";
 import type { CreateUserData } from "../types/dbTypes.js";
 
@@ -69,4 +69,45 @@ class UserRepository {
 	}
 }
 
+class RefreshTokenRepository {
+	constructor(readonly dbClient: typeof db) { }
+
+	async createToken(params: { userId: number, token: string, expiresAt: Date, userAgent?: string | null | undefined }) {
+		try {
+			await this.dbClient.insert(refreshTokens).values({
+				userId: params.userId,
+				token: params.token,
+				expiresAt: params.expiresAt,
+				userAgent: params.userAgent ?? null,
+			});
+		} catch (error) {
+			console.error("Error creating refresh token:", error);
+			throw new Error("Failed to create refresh token");
+		}
+	}
+
+	async findByToken(token: string) {
+		try {
+			const [row] = await this.dbClient.select().from(refreshTokens).where(eq(refreshTokens.token, token)).limit(1);
+			return row;
+		} catch (error) {
+			console.error("Error finding refresh token:", error);
+			throw new Error("Failed to find refresh token");
+		}
+	}
+
+	async revokeToken(token: string) {
+		try {
+			await this.dbClient
+				.update(refreshTokens)
+				.set({ revoked: true })
+				.where(eq(refreshTokens.token, token));
+		} catch (error) {
+			console.error("Error revoking refresh token:", error);
+			throw new Error("Failed to revoke refresh token");
+		}
+	}
+}
+
 export const userRepository = new UserRepository(db);
+export const refreshTokenRepository = new RefreshTokenRepository(db);
