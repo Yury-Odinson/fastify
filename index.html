@@ -18,7 +18,7 @@
 	</div>
 	<hr>
 	<div>
-		<input type="text" name="logusername" placeholder="Username">
+		<input type="text" name="logemail" placeholder="email">
 		<input type="password" name="logpassword" placeholder="Password">
 		<button id="login">Login</button>
 	</div>
@@ -44,6 +44,21 @@
 				'Content-Type': 'application/json',
 			},
 			body: JSON.stringify({ name, email, password }),
+		})
+			.then(response => response.json())
+			.then(data => console.log(data));
+	});
+
+	document.getElementById('login').addEventListener('click', () => {
+		const email = document.querySelector('input[name="logemail"]').value;
+		const password = document.querySelector('input[name="logpassword"]').value;
+
+		fetch('http://127.0.0.1:4000/api/auth', {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify({ email, password }),
 		})
 			.then(response => response.json())
 			.then(data => console.log(data));
