@@ -13,6 +13,9 @@ const envSchema = {
     PORT: { type: "number", default: 4000 },
     CORS_ORIGINS: { type: "string", default: "" },
     DATABASE_URL: { type: "string", },
+		JWT_SECRET: { type: "string", default: "supersecret" },
+		REFRESH_TOKEN_TTL_DAYS: { type: "number", default: 30 },
+		ACCESS_TOKEN_TTL_MINUTES: { type: "number", default: 15 },
   },
 };
 
@@ -22,6 +25,9 @@ type AppConfig = {
   PORT: number;
   CORS_ORIGINS: string;
   DATABASE_URL?: string;
+	JWT_SECRET: string;
+	REFRESH_TOKEN_TTL_DAYS: number;
+	ACCESS_TOKEN_TTL_MINUTES: number;
 };
 
 declare module "fastify" {

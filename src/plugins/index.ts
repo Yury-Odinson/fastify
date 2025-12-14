@@ -32,4 +32,6 @@ export const registerPlugins = (app: FastifyInstance) => {
   app.register(helmet, {
     contentSecurityPolicy: false,
   });
+	
+	app.register(import("./auth.js"));
 };
