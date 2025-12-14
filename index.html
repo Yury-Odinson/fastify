@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Document</title>
+</head>
+
+<body>
+	<button id="check">check users</button>
+	<hr>
+	<div>
+		<input type="text" name="regusername" placeholder="Username">
+		<input type="text" name="regemail" placeholder="email">
+		<input type="password" name="regpassword" placeholder="Password">
+		<button id="register">Register</button>
+	</div>
+	<hr>
+	<div>
+		<input type="text" name="logusername" placeholder="Username">
+		<input type="password" name="logpassword" placeholder="Password">
+		<button id="login">Login</button>
+	</div>
+</body>
+<script>
+	document.getElementById('check').addEventListener('click', () => {
+		console.log('check login status');
+		fetch('http://127.0.0.1:4000/api/getUsers', {
+			method: 'GET',
+		})
+			.then(response => response.json())
+			.then(data => console.log(data));
+	});
+
+	document.getElementById('register').addEventListener('click', () => {
+		const name = document.querySelector('input[name="regusername"]').value;
+		const email = document.querySelector('input[name="regemail"]').value;
+		const password = document.querySelector('input[name="regpassword"]').value;
+
+		fetch('http://127.0.0.1:4000/api/registration', {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+			},
+			body: JSON.stringify({ name, email, password }),
+		})
+			.then(response => response.json())
+			.then(data => console.log(data));
+	});
+</script>
+
+</html>

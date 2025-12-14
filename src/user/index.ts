@@ -17,6 +17,10 @@ class UserService {
 	async createUser(userData: CreateUserDTO): Promise<void> {
 		const password = await this.hashPassword(userData.password);
 
+		if (!userData.lang) {
+			userData.lang = "ru";
+		}
+
 		try {
 			return this.repository.createUser({
 				...userData,
