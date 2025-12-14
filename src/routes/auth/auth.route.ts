@@ -26,7 +26,7 @@ export const authenticateUserRoutes = (app: FastifyInstance) => {
 		return {
 			message: "User authenticated",
 			accessToken,
-			hashedRefreshToken
+			refreshToken
 		}
 	});
 };
