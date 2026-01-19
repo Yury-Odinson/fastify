@@ -1,5 +1,5 @@
 import argon2 from "argon2";
-import { userRepository } from "../db/index.js";
+import { ConflictError, userRepository } from "../db/index.js";
 import type { CreateUserDTO } from "../types/DTO.js";
 
 class UserService {
@@ -27,6 +27,9 @@ class UserService {
 				password,
 			});
 		} catch (error) {
+			if (error instanceof ConflictError) {
+				throw error;
+			}
 			console.error("Error in UserService createUser:", error);
 			throw new Error("Failed to create user in service layer");
 		}

@@ -7,26 +7,34 @@ import { refreshTokenRepository } from "../../db/index.js";
 export const authenticateUserRoutes = (app: FastifyInstance) => {
 	app.post<{ Body: AuthenticateUserDTO }>("/api/auth", async (request) => {
 
-		const { email, password } = request.body;
+		try {
 
-		const userData = await userService.authenticateUser(email, password);
+			const { email, password } = request.body;
 
-		const accessToken = app.jwt.sign({ email }, { expiresIn: `${app.config.ACCESS_TOKEN_TTL_MINUTES}m` });
-		const refreshToken = app.jwt.sign({ email }, { expiresIn: `${app.config.REFRESH_TOKEN_TTL_DAYS}d` });
+			const userData = await userService.authenticateUser(email, password);
 
-		const hashedRefreshToken = await argon2.hash(refreshToken);
+			const accessToken = app.jwt.sign({ email }, { expiresIn: `${app.config.ACCESS_TOKEN_TTL_MINUTES}m` });
+			const refreshToken = app.jwt.sign({ email }, { expiresIn: `${app.config.REFRESH_TOKEN_TTL_DAYS}d` });
 
-		refreshTokenRepository.createToken({
-			userId: userData.id,
-			token: hashedRefreshToken,
-			expiresAt: new Date(Date.now() + app.config.REFRESH_TOKEN_TTL_DAYS * 24 * 60 * 60 * 1000),
-			userAgent: request.headers["user-agent"]
-		});
+			const hashedRefreshToken = await argon2.hash(refreshToken);
 
-		return {
-			message: "User authenticated",
-			accessToken,
-			refreshToken
+			refreshTokenRepository.createToken({
+				userId: userData.id,
+				token: hashedRefreshToken,
+				expiresAt: new Date(Date.now() + app.config.REFRESH_TOKEN_TTL_DAYS * 24 * 60 * 60 * 1000),
+				userAgent: request.headers["user-agent"]
+			});
+
+			return {
+				message: "User authenticated",
+				accessToken,
+				refreshToken
+			}
+		} catch (error) {
+			if (error instanceof Error && error.message === "Invalid credentials") {
+				throw app.httpErrors.unauthorized("Invalid credentials");
+			}
+			throw error;
 		}
 	});
 };

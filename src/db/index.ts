@@ -5,6 +5,13 @@ import { refreshTokens, users } from "./schema.js";
 import { eq, sql } from "drizzle-orm";
 import type { CreateUserData } from "../types/dbTypes.js";
 
+export class ConflictError extends Error {
+	constructor(message = "Conflict") {
+		super(message);
+		this.name = "ConflictError";
+	}
+}
+
 const pool = new Pool({
 	connectionString: process.env.DATABASE_URL,
 });
@@ -53,6 +60,13 @@ class UserRepository {
 					lang: userData.lang
 				})
 		} catch (error) {
+			const pgError = error as { cause?: { code?: string } };
+			const pgCode = pgError?.cause?.code;
+			
+			if (pgCode === "23505") {
+				throw new ConflictError("Email already in use");
+			}
+
 			console.error("Error creating user:", error);
 			throw new Error("Failed to create user");
 		}
