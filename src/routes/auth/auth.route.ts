@@ -18,7 +18,7 @@ export const authenticateUserRoutes = (app: FastifyInstance) => {
 
 			const hashedRefreshToken = await argon2.hash(refreshToken);
 
-			refreshTokenRepository.createToken({
+			await refreshTokenRepository.createToken({
 				userId: userData.id,
 				token: hashedRefreshToken,
 				expiresAt: new Date(Date.now() + app.config.REFRESH_TOKEN_TTL_DAYS * 24 * 60 * 60 * 1000),
