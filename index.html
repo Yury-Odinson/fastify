@@ -1,68 +1,415 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>Document</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mind Tracker Auth Console</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg-1: #0f172a;
+      --bg-2: #1f2937;
+      --bg-3: #0b1020;
+      --card: rgba(255, 255, 255, 0.08);
+      --card-strong: rgba(255, 255, 255, 0.14);
+      --border: rgba(255, 255, 255, 0.18);
+      --accent: #fbbf24;
+      --accent-2: #38bdf8;
+      --text: #f8fafc;
+      --muted: #cbd5f5;
+      --danger: #f87171;
+      --good: #34d399;
+      --shadow: 0 20px 60px rgba(3, 7, 18, 0.45);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Space Grotesk", sans-serif;
+      color: var(--text);
+      background: radial-gradient(circle at 20% 20%, #1e293b 0%, var(--bg-1) 45%),
+        radial-gradient(circle at 80% 0%, #111827 0%, var(--bg-2) 40%),
+        linear-gradient(160deg, var(--bg-3), #0b1120 55%, #111827);
+      min-height: 100vh;
+      display: flex;
+      align-items: stretch;
+      justify-content: center;
+      padding: 32px 20px 56px;
+    }
+
+    .shell {
+      width: min(1100px, 100%);
+      display: grid;
+      gap: 24px;
+    }
+
+    header {
+      display: grid;
+      gap: 8px;
+      align-items: center;
+    }
+
+    header h1 {
+      font-size: clamp(28px, 3vw, 40px);
+      letter-spacing: -0.02em;
+      margin: 0;
+    }
+
+    header p {
+      margin: 0;
+      color: var(--muted);
+      max-width: 64ch;
+    }
+
+    .grid {
+      display: grid;
+      gap: 20px;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 18px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+      display: grid;
+      gap: 12px;
+      animation: rise 0.6s ease both;
+    }
+
+    .card strong {
+      font-size: 16px;
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+      color: var(--accent);
+    }
+
+    label {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+    }
+
+    input {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid transparent;
+      background: var(--card-strong);
+      color: var(--text);
+      font-family: "IBM Plex Mono", monospace;
+    }
+
+    input:focus {
+      outline: none;
+      border-color: var(--accent-2);
+      box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.2);
+    }
+
+    .row {
+      display: grid;
+      gap: 8px;
+			height: 48px;
+    }
+
+    button {
+      border: none;
+			margin: auto 0 0;
+      padding: 10px 14px;
+			height: 48px;
+      border-radius: 12px;
+      background: linear-gradient(120deg, var(--accent), #f59e0b);
+      color: #111827;
+      font-weight: 700;
+      font-size: 13px;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 12px 24px rgba(251, 191, 36, 0.2);
+    }
+
+    button.secondary {
+      background: linear-gradient(120deg, #38bdf8, #0ea5e9);
+      color: #0b1020;
+    }
+
+		button.secondary:hover {
+			box-shadow: 0 12px 24px hsla(198, 93%, 60%, 0.2);
+    }
+
+    .tokens {
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 12px;
+      background: rgba(15, 23, 42, 0.8);
+      border: 1px dashed rgba(148, 163, 184, 0.35);
+      border-radius: 12px;
+      padding: 12px;
+      display: grid;
+      gap: 8px;
+      overflow-wrap: anywhere;
+    }
+
+    .tokens span {
+      color: var(--muted);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .log {
+      background: rgba(15, 23, 42, 0.8);
+      border: 1px solid rgba(148, 163, 184, 0.2);
+      border-radius: 16px;
+      padding: 16px;
+      min-height: 180px;
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 12px;
+      color: #e2e8f0;
+      overflow-y: auto;
+      display: grid;
+      gap: 10px;
+    }
+
+    .log-entry {
+      display: grid;
+      gap: 6px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--muted);
+    }
+
+    .badge::before {
+      content: "";
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--good);
+      display: inline-block;
+    }
+
+    .badge.error::before {
+      background: var(--danger);
+    }
+
+    @keyframes rise {
+      from {
+        opacity: 0;
+        transform: translateY(12px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @media (max-width: 700px) {
+      body {
+        padding: 24px 16px 40px;
+      }
+
+      header {
+        text-align: left;
+      }
+    }
+  </style>
 </head>
-
 <body>
-	<button id="check">check users</button>
-	<hr>
-	<div>
-		<input type="text" name="regusername" placeholder="Username">
-		<input type="text" name="regemail" placeholder="email">
-		<input type="text" name="regpassword" placeholder="Password">
-		<button id="register">Register</button>
-	</div>
-	<hr>
-	<div>
-		<input type="text" name="logemail" placeholder="email">
-		<input type="text" name="logpassword" placeholder="Password">
-		<button id="login">Login</button>
-	</div>
+  <div class="shell">
+    <header>
+      <h1>Mind Tracker Auth Console</h1>
+      <p>Quick playground to validate registration, login, refresh, and protected requests.</p>
+    </header>
+
+    <div class="card">
+      <strong>Environment</strong>
+      <div class="row">
+        <label for="baseUrl">API Base URL</label>
+        <input id="baseUrl" type="text" value="http://127.0.0.1:4000" />
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <strong>Registration</strong>
+        <div class="row">
+          <label for="regName">Name</label>
+          <input id="regName" type="text" placeholder="Ada Lovelace" />
+        </div>
+        <div class="row">
+          <label for="regEmail">Email</label>
+          <input id="regEmail" type="email" placeholder="ada@example.com" />
+        </div>
+        <div class="row">
+          <label for="regPassword">Password</label>
+          <input id="regPassword" type="password" placeholder="********" />
+        </div>
+        <button id="registerBtn">Register</button>
+      </div>
+
+      <div class="card">
+        <strong>Login</strong>
+        <div class="row">
+          <label for="logEmail">Email</label>
+          <input id="logEmail" type="email" placeholder="ada@example.com" />
+        </div>
+        <div class="row">
+          <label for="logPassword">Password</label>
+          <input id="logPassword" type="password" placeholder="********" />
+        </div>
+        <button id="loginBtn" class="secondary">Login</button>
+      </div>
+
+      <div class="card">
+        <strong>Refresh</strong>
+        <p>Use when access token expires (or to test rotation).</p>
+        <button id="refreshBtn">Refresh Tokens</button>
+        <div class="tokens">
+          <div>
+            <span>Access token</span>
+            <div id="accessTokenView">(none)</div>
+          </div>
+          <div>
+            <span>Refresh token</span>
+            <div id="refreshTokenView">(none)</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <strong>Protected Call</strong>
+        <p>Calls <code>/api/getUsers</code> with access token.</p>
+        <button id="usersBtn" class="secondary">Get Users</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <strong>Request Log</strong>
+      <div id="log" class="log"></div>
+    </div>
+  </div>
+
+  <script>
+    const state = {
+      accessToken: null,
+      refreshToken: null,
+    };
+
+    const log = (label, payload, isError = false) => {
+      const logEl = document.getElementById("log");
+      const entry = document.createElement("div");
+      entry.className = "log-entry";
+      const badge = document.createElement("div");
+      badge.className = `badge ${isError ? "error" : ""}`;
+      badge.textContent = label;
+      const pre = document.createElement("pre");
+      pre.textContent = typeof payload === "string" ? payload : JSON.stringify(payload, null, 2);
+      entry.appendChild(badge);
+      entry.appendChild(pre);
+      logEl.prepend(entry);
+    };
+
+    const updateTokens = () => {
+      document.getElementById("accessTokenView").textContent = state.accessToken || "(none)";
+      document.getElementById("refreshTokenView").textContent = state.refreshToken || "(none)";
+    };
+
+    const baseUrl = () => document.getElementById("baseUrl").value.replace(/\/$/, "");
+
+    const apiRequest = async (path, options = {}) => {
+      const response = await fetch(`${baseUrl()}${path}`, options);
+      let body = null;
+      try {
+        body = await response.json();
+      } catch {
+        body = await response.text();
+      }
+      return { response, body };
+    };
+
+    document.getElementById("registerBtn").addEventListener("click", async () => {
+      const name = document.getElementById("regName").value;
+      const email = document.getElementById("regEmail").value;
+      const password = document.getElementById("regPassword").value;
+
+      const { response, body } = await apiRequest("/api/registration", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, email, password }),
+      });
+
+      log(`REGISTER ${response.status}`, body, !response.ok);
+    });
+
+    document.getElementById("loginBtn").addEventListener("click", async () => {
+      const email = document.getElementById("logEmail").value;
+      const password = document.getElementById("logPassword").value;
+
+      const { response, body } = await apiRequest("/api/auth", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+
+      if (response.ok) {
+        state.accessToken = body.accessToken;
+        state.refreshToken = body.refreshToken;
+        updateTokens();
+      }
+
+      log(`LOGIN ${response.status}`, body, !response.ok);
+    });
+
+    document.getElementById("refreshBtn").addEventListener("click", async () => {
+      const { response, body } = await apiRequest("/api/auth/refresh", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ refreshToken: state.refreshToken }),
+      });
+
+      if (response.ok) {
+        state.accessToken = body.accessToken;
+        state.refreshToken = body.refreshToken;
+        updateTokens();
+      }
+
+      log(`REFRESH ${response.status}`, body, !response.ok);
+    });
+
+    document.getElementById("usersBtn").addEventListener("click", async () => {
+      const headers = {};
+      if (state.accessToken) {
+        headers.Authorization = `Bearer ${state.accessToken}`;
+      }
+
+      const { response, body } = await apiRequest("/api/getUsers", {
+        method: "GET",
+        headers,
+      });
+
+      log(`GET USERS ${response.status}`, body, !response.ok);
+    });
+
+    updateTokens();
+  </script>
 </body>
-<script>
-	document.getElementById('check').addEventListener('click', () => {
-		console.log('check login status');
-		fetch('http://127.0.0.1:4000/api/getUsers', {
-			method: 'GET',
-		})
-			.then(response => response.json())
-			.then(data => console.log(data));
-	});
-
-	document.getElementById('register').addEventListener('click', () => {
-		const name = document.querySelector('input[name="regusername"]').value;
-		const email = document.querySelector('input[name="regemail"]').value;
-		const password = document.querySelector('input[name="regpassword"]').value;
-
-		fetch('http://127.0.0.1:4000/api/registration', {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json',
-			},
-			body: JSON.stringify({ name, email, password }),
-		})
-			.then(response => response.json())
-			.then(data => console.log(data));
-	});
-
-	document.getElementById('login').addEventListener('click', () => {
-		const email = document.querySelector('input[name="logemail"]').value;
-		const password = document.querySelector('input[name="logpassword"]').value;
-
-		fetch('http://127.0.0.1:4000/api/auth', {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json'
-			},
-			body: JSON.stringify({ email, password }),
-		})
-			.then(response => response.json())
-			.then(data => console.log(data));
-	});
-</script>
-
 </html>

@@ -2,7 +2,7 @@ import "dotenv/config";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
 import { refreshTokens, users } from "./schema.js";
-import { eq, sql } from "drizzle-orm";
+import { and, eq, gt, sql } from "drizzle-orm";
 import type { CreateUserData } from "../types/dbTypes.js";
 
 export class ConflictError extends Error {
@@ -62,7 +62,7 @@ class UserRepository {
 		} catch (error) {
 			const pgError = error as { cause?: { code?: string } };
 			const pgCode = pgError?.cause?.code;
-			
+
 			if (pgCode === "23505") {
 				throw new ConflictError("Email already in use");
 			}
@@ -110,6 +110,24 @@ class RefreshTokenRepository {
 		}
 	}
 
+	async findActiveByUserId(userId: number) {
+		try {
+			return await this.dbClient
+				.select({ id: refreshTokens.id, token: refreshTokens.token, expiresAt: refreshTokens.expiresAt })
+				.from(refreshTokens)
+				.where(
+					and(
+						eq(refreshTokens.userId, userId),
+						eq(refreshTokens.revoked, false),
+						gt(refreshTokens.expiresAt, new Date())
+					)
+				);
+		} catch (error) {
+			console.error("Error finding active refresh tokens:", error);
+			throw new Error("Failed to find active refresh tokens");
+		}
+	}
+
 	async revokeToken(token: string) {
 		try {
 			await this.dbClient
@@ -118,6 +136,18 @@ class RefreshTokenRepository {
 				.where(eq(refreshTokens.token, token));
 		} catch (error) {
 			console.error("Error revoking refresh token:", error);
+			throw new Error("Failed to revoke refresh token");
+		}
+	}
+
+	async revokeTokenById(id: string) {
+		try {
+			await this.dbClient
+				.update(refreshTokens)
+				.set({ revoked: true })
+				.where(eq(refreshTokens.id, id));
+		} catch (error) {
+			console.error("Error revoking refresh token by id:", error);
 			throw new Error("Failed to revoke refresh token");
 		}
 	}
