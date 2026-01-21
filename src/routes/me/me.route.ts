@@ -20,9 +20,9 @@ export const meRoutes = (app: AuthenticatedApp) => {
 		}
 
 		return {
-			id: userData.id,
 			name: userData.name,
 			email: userData.email,
+			lang: userData.lang,
 		};
 	});
 };

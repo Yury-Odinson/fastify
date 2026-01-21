@@ -26,10 +26,6 @@
 			color: var(--text);
 		}
 
-		input {
-			color: var(--text)
-		}
-
 		.card {
 			width: min(520px, 90vw);
 			background: var(--panel);
@@ -60,6 +56,7 @@
 
 		.value {
 			padding: 10px 12px;
+			height: 42px;
 			border-radius: 10px;
 			background: rgba(30, 41, 59, 0.7);
 			border: 1px solid var(--border);
@@ -97,12 +94,17 @@
 
 		<div class="field">
 			<div class="label">Name</div>
-			<div id="profileName" class="value">User Name</div>
+			<div id="profileName" class="value"></div>
 		</div>
 
 		<div class="field">
 			<div class="label">Email</div>
-			<input id="profileEmail" class="value"></input>
+			<div id="profileEmail" class="value"></div>
+		</div>
+
+		<div class="field">
+			<div class="label">Language</div>
+			<div id="profileLang" class="value"></div>
 		</div>
 
 		<div class="actions">
@@ -123,6 +125,7 @@
 		const logEl = document.getElementById("log");
 		const nameEl = document.getElementById("profileName");
 		const emailEl = document.getElementById("profileEmail");
+		const langEl = document.getElementById("profileLang");
 
 		const logMessage = (message) => {
 			const time = new Date().toLocaleTimeString();
@@ -192,6 +195,7 @@
 
 				nameEl.textContent = data.name ?? "—";
 				emailEl.textContent = data.email ?? "—";
+				langEl.textContent = data.lang ?? "—";
 				logMessage("Profile updated.");
 			} catch (error) {
 				logMessage(`Request failed: ${error}`);
