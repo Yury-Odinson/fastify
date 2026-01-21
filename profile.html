@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Profile</title>
+	<style>
+		:root {
+			--bg: #0f172a;
+			--panel: #111827;
+			--text: #e2e8f0;
+			--muted: #94a3b8;
+			--accent: #38bdf8;
+			--border: #1f2937;
+		}
+
+		* { box-sizing: border-box; }
+
+		body {
+			margin: 0;
+			min-height: 100vh;
+			display: grid;
+			place-items: center;
+			background: radial-gradient(circle at top, #1e293b, var(--bg));
+			font-family: "Space Grotesk", system-ui, -apple-system, sans-serif;
+			color: var(--text);
+		}
+
+		input {
+			color: var(--text)
+		}
+
+		.card {
+			width: min(520px, 90vw);
+			background: var(--panel);
+			border: 1px solid var(--border);
+			border-radius: 16px;
+			padding: 24px;
+			display: grid;
+			gap: 16px;
+			box-shadow: 0 20px 60px rgba(2, 6, 23, 0.5);
+		}
+
+		h1 {
+			margin: 0;
+			font-size: 24px;
+		}
+
+		.field {
+			display: grid;
+			gap: 6px;
+		}
+
+		.label {
+			font-size: 12px;
+			text-transform: uppercase;
+			letter-spacing: 0.08em;
+			color: var(--muted);
+		}
+
+		.value {
+			padding: 10px 12px;
+			border-radius: 10px;
+			background: rgba(30, 41, 59, 0.7);
+			border: 1px solid var(--border);
+		}
+
+		.actions {
+			display: grid;
+			grid-template-columns: 1fr 1fr;
+			gap: 12px;
+		}
+
+		button {
+			padding: 12px;
+			border: none;
+			border-radius: 10px;
+			font-weight: 600;
+			cursor: pointer;
+		}
+
+		.btn-test {
+			background: var(--accent);
+			color: #0b1120;
+		}
+
+		.btn-logout {
+			background: transparent;
+			border: 1px solid var(--border);
+			color: var(--text);
+		}
+	</style>
+</head>
+<body>
+	<main class="card">
+		<h1>Profile</h1>
+
+		<div class="field">
+			<div class="label">Name</div>
+			<div id="profileName" class="value">User Name</div>
+		</div>
+
+		<div class="field">
+			<div class="label">Email</div>
+			<input id="profileEmail" class="value"></input>
+		</div>
+
+		<div class="actions">
+			<button class="btn-test" id="testApiBtn">Load Profile</button>
+			<button class="btn-logout" id="logoutBtn">Logout</button>
+		</div>
+
+		<div class="field">
+			<div class="label">Log</div>
+			<div id="log" class="value" style="min-height: 80px; font-family: monospace; white-space: pre-wrap;"></div>
+		</div>
+	</main>
+
+	<script>
+		const API_BASE_URL = "http://127.0.0.1:4000";
+		let accessToken = null;
+
+		const logEl = document.getElementById("log");
+		const nameEl = document.getElementById("profileName");
+		const emailEl = document.getElementById("profileEmail");
+
+		const logMessage = (message) => {
+			const time = new Date().toLocaleTimeString();
+			logEl.textContent = `[${time}] ${message}\n${logEl.textContent}`;
+		};
+
+		const refreshAccessToken = async () => {
+			const response = await fetch(`${API_BASE_URL}/api/auth/refresh`, {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				credentials: "include",
+				body: JSON.stringify({}),
+			});
+
+			const data = await response.json().catch(async () => {
+				const text = await response.text().catch(() => "");
+				return { raw: text };
+			});
+			logMessage(`REFRESH -> ${response.status}`);
+
+			if (!response.ok) {
+				logMessage(JSON.stringify(data));
+				return false;
+			}
+
+			accessToken = typeof data.accessToken === "string" ? data.accessToken : null;
+			logMessage(accessToken ? "Access token received." : "Access token missing in refresh response.");
+			return Boolean(accessToken);
+		};
+
+		const loadProfile = async () => {
+			if (!accessToken) {
+				const refreshed = await refreshAccessToken();
+				if (!refreshed) {
+					logMessage("No valid session. Please login again.");
+					return;
+				}
+			}
+
+			const requestProfile = async () => {
+				const response = await fetch(`${API_BASE_URL}/api/me`, {
+					method: "GET",
+					headers: {
+						Authorization: `Bearer ${accessToken}`,
+					},
+				});
+				const data = await response.json();
+				return { response, data };
+			};
+
+			try {
+				let { response, data } = await requestProfile();
+				logMessage(`GET /api/me -> ${response.status}`);
+
+				if (response.status === 401) {
+					const refreshed = await refreshAccessToken();
+					if (refreshed) {
+						({ response, data } = await requestProfile());
+						logMessage(`GET /api/me (retry) -> ${response.status}`);
+					}
+				}
+
+				if (!response.ok) {
+					logMessage(JSON.stringify(data));
+					return;
+				}
+
+				nameEl.textContent = data.name ?? "—";
+				emailEl.textContent = data.email ?? "—";
+				logMessage("Profile updated.");
+			} catch (error) {
+				logMessage(`Request failed: ${error}`);
+			}
+		};
+
+		document.getElementById("testApiBtn").addEventListener("click", loadProfile);
+
+		document.getElementById("logoutBtn").addEventListener("click", () => {
+			accessToken = null;
+			logMessage("Logged out. Access token cleared.");
+			window.location.href = "index.html";
+		});
+	</script>
+</body>
+</html>

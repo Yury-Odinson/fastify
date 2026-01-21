@@ -7,8 +7,11 @@ type RefreshTokenBody = {
 };
 
 export const refreshTokenRoutes = (app: FastifyInstance) => {
-	app.post<{ Body: RefreshTokenBody }>("/api/auth/refresh", async (request) => {
-		const { refreshToken } = request.body ?? {};
+	app.post<{ Body: RefreshTokenBody }>("/api/auth/refresh", async (request, reply) => {
+		const client = request.headers["x-client"] || "web";
+		const refreshToken =
+			request.body?.refreshToken ||
+			(request.cookies ? (request.cookies as { refreshToken?: string }).refreshToken : undefined);
 		if (!refreshToken) {
 			throw app.httpErrors.badRequest("Refresh token is required");
 		}
@@ -65,14 +68,20 @@ export const refreshTokenRoutes = (app: FastifyInstance) => {
 				userAgent: request.headers["user-agent"]
 			});
 
-			return {
-				accessToken,
-				refreshToken: newRefreshToken
-			};
-		} catch (error) {
-			if (error instanceof Error && error.message === "Invalid refresh token") {
-				throw app.httpErrors.unauthorized("Invalid refresh token");
+			if (client === "mobile") {
+				return { accessToken, refreshToken: newRefreshToken };
 			}
+
+			reply.setCookie("refreshToken", newRefreshToken, {
+				httpOnly: true,
+				secure: app.config.NODE_ENV === "production",
+				sameSite: "lax",
+				path: "/api/auth",
+				maxAge: app.config.REFRESH_TOKEN_TTL_DAYS * 24 * 60 * 60,
+			});
+
+			return { accessToken };
+		} catch (error) {
 			throw error;
 		}
 	});

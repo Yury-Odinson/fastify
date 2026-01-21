@@ -5,6 +5,7 @@ import { registerUsersRoutes } from "./users/users.route.js";
 import { registrationUserRoutes } from "./registration/registration.route.js";
 import { authenticateUserRoutes } from "./auth/auth.route.js";
 import { refreshTokenRoutes } from "./auth/refresh.route.js";
+import { meRoutes } from "./me/me.route.js";
 
 export const registerRoutes = (app: FastifyInstance) => {
 	registerHealthRoutes(app);
@@ -12,4 +13,5 @@ export const registerRoutes = (app: FastifyInstance) => {
 	registrationUserRoutes(app);
 	authenticateUserRoutes(app);
 	refreshTokenRoutes(app);
+	meRoutes(app as FastifyInstance & { authenticate: (req: unknown, reply: unknown) => Promise<void> });
 };

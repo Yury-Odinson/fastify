@@ -10,7 +10,7 @@ const parseCorsOrigins = (origins: string) =>
     .map((origin) => origin.trim())
     .filter(Boolean);
 
-export const registerPlugins = (app: FastifyInstance) => {
+export const registerPlugins = async (app: FastifyInstance) => {
   const isProd = app.config.NODE_ENV === "production";
   const corsOrigins = parseCorsOrigins(app.config.CORS_ORIGINS);
 
@@ -33,5 +33,5 @@ export const registerPlugins = (app: FastifyInstance) => {
     contentSecurityPolicy: false,
   });
 	
-	app.register(import("./auth.js"));
+	await app.register(import("./auth.js"));
 };

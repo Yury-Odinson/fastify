@@ -3,10 +3,16 @@ import { ConflictError, userRepository } from "../db/index.js";
 import type { CreateUserDTO } from "../types/DTO.js";
 
 class UserService {
-	getUserByEmail(email: string) {
-		throw new Error("Method not implemented.");
-	}
 	constructor(private readonly repository = userRepository) { }
+	
+	getUserByEmail(email: string) {
+		try {
+			return this.repository.findByEmail(email);
+		} catch (error) {
+			console.error("Error in UserService getUserByEmail:", error);
+			throw new Error("Failed to get user by email in service layer");
+		}
+	}
 
 	getUsers(page: number, limit: number) {
 		try {

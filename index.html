@@ -336,7 +336,10 @@
     const baseUrl = () => document.getElementById("baseUrl").value.replace(/\/$/, "");
 
     const apiRequest = async (path, options = {}) => {
-      const response = await fetch(`${baseUrl()}${path}`, options);
+      const response = await fetch(`${baseUrl()}${path}`, {
+        credentials: "include",
+        ...options,
+      });
       let body = null;
       try {
         body = await response.json();
@@ -372,8 +375,9 @@
 
       if (response.ok) {
         state.accessToken = body.accessToken;
-        state.refreshToken = body.refreshToken;
+        state.refreshToken = body.refreshToken ?? null;
         updateTokens();
+				window.location.href = "profile.html";
       }
 
       log(`LOGIN ${response.status}`, body, !response.ok);
@@ -383,12 +387,12 @@
       const { response, body } = await apiRequest("/api/auth/refresh", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ refreshToken: state.refreshToken }),
+        body: JSON.stringify({}),
       });
 
       if (response.ok) {
         state.accessToken = body.accessToken;
-        state.refreshToken = body.refreshToken;
+        state.refreshToken = body.refreshToken ?? state.refreshToken;
         updateTokens();
       }
 

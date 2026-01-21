@@ -5,13 +5,15 @@ import argon2 from "argon2";
 import { refreshTokenRepository } from "../../db/index.js";
 
 export const authenticateUserRoutes = (app: FastifyInstance) => {
-	app.post<{ Body: AuthenticateUserDTO }>("/api/auth", async (request) => {
+	app.post<{ Body: AuthenticateUserDTO }>("/api/auth", async (request, reply) => {
 
 		try {
 
 			const { email, password } = request.body;
 
 			const userData = await userService.authenticateUser(email, password);
+
+			const client = request.headers["x-client"] || "web";
 
 			const accessToken = app.jwt.sign({ email }, { expiresIn: `${app.config.ACCESS_TOKEN_TTL_MINUTES}m` });
 			const refreshToken = app.jwt.sign({ email }, { expiresIn: `${app.config.REFRESH_TOKEN_TTL_DAYS}d` });
@@ -25,10 +27,21 @@ export const authenticateUserRoutes = (app: FastifyInstance) => {
 				userAgent: request.headers["user-agent"]
 			});
 
+			if (client === "mobile") {
+				return { message: "User authenticated", accessToken, refreshToken };
+			}
+
+			reply.setCookie("refreshToken", refreshToken, {
+				httpOnly: true,
+				secure: app.config.NODE_ENV === "production",
+				sameSite: "lax",
+				path: "/api/auth",
+				maxAge: app.config.REFRESH_TOKEN_TTL_DAYS * 24 * 60 * 60,
+			});
+
 			return {
 				message: "User authenticated",
-				accessToken,
-				refreshToken
+				accessToken
 			}
 		} catch (error) {
 			if (error instanceof Error && error.message === "Invalid credentials") {

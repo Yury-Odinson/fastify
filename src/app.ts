@@ -48,7 +48,7 @@ export const buildApp = async () => {
     dotenv: true,
   });
 
-  registerPlugins(app);
+  await registerPlugins(app);
   registerRoutes(app);
 
   return app;
