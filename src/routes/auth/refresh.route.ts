@@ -52,7 +52,7 @@ export const refreshTokenRoutes = (app: FastifyInstance) => {
 			await refreshTokenRepository.revokeTokenById(matchedToken.id);
 
 			const accessToken = app.jwt.sign(
-				{ email },
+				{ email, userId: user.id },
 				{ expiresIn: `${app.config.ACCESS_TOKEN_TTL_MINUTES}m` }
 			);
 			const newRefreshToken = app.jwt.sign(

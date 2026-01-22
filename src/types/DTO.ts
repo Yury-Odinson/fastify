@@ -23,3 +23,9 @@ export type AuthenticateUserDTO = {
 	email: string;
 	password: string;
 };
+
+export type MoodEntryDTO = {
+	userId: number;
+	moodId: number;
+	note?: string | undefined;
+};

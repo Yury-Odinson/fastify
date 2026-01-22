@@ -1,9 +1,10 @@
 import "dotenv/config";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
-import { refreshTokens, users } from "./schema.js";
+import { refreshTokens, userMoods, users } from "./schema.js";
 import { and, eq, gt, sql } from "drizzle-orm";
 import type { CreateUserData } from "../types/dbTypes.js";
+import type { MoodEntryDTO } from "../types/DTO.js";
 
 export class ConflictError extends Error {
 	constructor(message = "Conflict") {
@@ -153,5 +154,23 @@ class RefreshTokenRepository {
 	}
 }
 
+class MoodRepository {
+	constructor(readonly dbClient: typeof db) { }
+
+	async createMoodEntry(params: MoodEntryDTO): Promise<void> {
+		try {
+			await this.dbClient.insert(userMoods).values({
+				userId: params.userId,
+				moodId: params.moodId,
+				note: params.note ?? "",
+			});
+		} catch (error) {
+			console.error("Error creating mood entry:", error);
+			throw new Error("Failed to create mood entry");
+		}
+	}
+}
+
 export const userRepository = new UserRepository(db);
 export const refreshTokenRepository = new RefreshTokenRepository(db);
+export const moodRepository = new MoodRepository(db);

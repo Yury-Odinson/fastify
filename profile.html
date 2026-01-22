@@ -43,6 +43,10 @@
 			font-size: 24px;
 		}
 
+		input {
+			color: var(--text);
+		}
+
 		.section {
 			display: grid;
 			gap: 16px;
@@ -168,6 +172,11 @@
 			</div>
 
 			<div class="field">
+				<div class="label">Note (optional)</div>
+				<input id="emotionNote" class="value" placeholder="Add a note...">
+			</div>
+
+			<div class="field">
 				<div class="label">Log</div>
 				<div id="log" class="value log" style="min-height: 120px; font-family: monospace; white-space: pre-wrap;"></div>
 			</div>
@@ -182,15 +191,8 @@
 		const nameEl = document.getElementById("profileName");
 		const emailEl = document.getElementById("profileEmail");
 		const langEl = document.getElementById("profileLang");
+		const noteEl = document.getElementById("emotionNote");
 		const emotionListEl = document.getElementById("emotionList");
-
-		for (let i = 1; i <= 24; i++) {
-			const li = document.createElement("li");
-			const btn = document.createElement("button");
-			btn.textContent = i.toString();
-			li.appendChild(btn);
-			emotionListEl.appendChild(li);
-		}
 
 		const logMessage = (message) => {
 			const time = new Date().toLocaleTimeString();
@@ -266,6 +268,66 @@
 				logMessage(`Request failed: ${error}`);
 			}
 		};
+
+		const sendMood = async (moodId) => {
+			if (!accessToken) {
+				const refreshed = await refreshAccessToken();
+				if (!refreshed) {
+					logMessage("No valid session. Please login again.");
+					return;
+				}
+			}
+
+			const payload = { moodId };
+			const noteValue = (noteEl.value || "").trim();
+			if (noteValue) {
+				payload.note = noteValue;
+			}
+
+			const postMood = async () => {
+				const response = await fetch(`${API_BASE_URL}/api/mood`, {
+					method: "POST",
+					headers: {
+						"Content-Type": "application/json",
+						Authorization: `Bearer ${accessToken}`,
+					},
+					body: JSON.stringify(payload),
+				});
+				const data = await response.json().catch(() => ({}));
+				return { response, data };
+			};
+
+			try {
+				let { response, data } = await postMood();
+				logMessage(`POST /api/mood -> ${response.status}`);
+
+				if (response.status === 401) {
+					const refreshed = await refreshAccessToken();
+					if (refreshed) {
+						({ response, data } = await postMood());
+						logMessage(`POST /api/mood (retry) -> ${response.status}`);
+					}
+				}
+
+				if (!response.ok) {
+					logMessage(JSON.stringify(data));
+					return;
+				}
+
+				logMessage(`Mood ${moodId} sent.`);
+			} catch (error) {
+				logMessage(`Mood request failed: ${error}`);
+			}
+		};
+
+		for (let i = 1; i <= 24; i++) {
+			const li = document.createElement("li");
+			const btn = document.createElement("button");
+			btn.textContent = i.toString();
+			btn.addEventListener("click", () => sendMood(i));
+			li.appendChild(btn);
+			emotionListEl.appendChild(li);
+		}
 
 		document.getElementById("testApiBtn").addEventListener("click", loadProfile);
 
