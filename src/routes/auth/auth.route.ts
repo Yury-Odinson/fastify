@@ -20,7 +20,6 @@ export const authenticateUserRoutes = (app: FastifyInstance) => {
 				{ expiresIn: `${app.config.ACCESS_TOKEN_TTL_MINUTES}m` }
 			);
 
-			console.log("========================", accessToken);
 			const refreshToken = app.jwt.sign({ email }, { expiresIn: `${app.config.REFRESH_TOKEN_TTL_DAYS}d` });
 
 			const hashedRefreshToken = await argon2.hash(refreshToken);
