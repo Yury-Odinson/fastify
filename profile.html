@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -14,7 +15,9 @@
 			--border: #1f2937;
 		}
 
-		* { box-sizing: border-box; }
+		* {
+			box-sizing: border-box;
+		}
 
 		body {
 			margin: 0;
@@ -139,6 +142,7 @@
 		}
 	</style>
 </head>
+
 <body>
 	<main class="card">
 		<section class="section">
@@ -161,6 +165,7 @@
 
 			<div class="actions">
 				<button class="btn-test" id="testApiBtn">Load Profile</button>
+				<button class="btn-test" id="checkListBtn">Check list</button>
 				<button class="btn-logout" id="logoutBtn">Logout</button>
 			</div>
 		</section>
@@ -320,6 +325,54 @@
 			}
 		};
 
+		const loadMoodList = async () => {
+			if (!accessToken) {
+				const refreshed = await refreshAccessToken();
+				if (!refreshed) {
+					logMessage("No valid session. Please login again.");
+					return;
+				}
+			}
+
+			const requestMoodList = async () => {
+				const response = await fetch(`${API_BASE_URL}/api/mood?page=1&limit=20`, {
+					method: "GET",
+					headers: {
+						Authorization: `Bearer ${accessToken}`,
+					},
+				});
+				const data = await response.json().catch(async () => {
+					const text = await response.text().catch(() => "");
+					return { raw: text };
+				});
+				return { response, data };
+			};
+
+			try {
+				let { response, data } = await requestMoodList();
+				logMessage(`GET /api/mood -> ${response.status}`);
+
+				if (response.status === 401) {
+					const refreshed = await refreshAccessToken();
+					if (refreshed) {
+						({ response, data } = await requestMoodList());
+						logMessage(`GET /api/mood (retry) -> ${response.status}`);
+					}
+				}
+
+				if (!response.ok) {
+					logMessage(JSON.stringify(data));
+					return;
+				}
+
+
+				console.log(data);
+				logMessage(`Mood list: ${JSON.stringify(data)}`);
+			} catch (error) {
+				logMessage(`Mood list request failed: ${error}`);
+			}
+		};
+
 		for (let i = 1; i <= 24; i++) {
 			const li = document.createElement("li");
 			const btn = document.createElement("button");
@@ -330,6 +383,7 @@
 		}
 
 		document.getElementById("testApiBtn").addEventListener("click", loadProfile);
+		document.getElementById("checkListBtn").addEventListener("click", loadMoodList);
 
 		document.getElementById("logoutBtn").addEventListener("click", () => {
 			accessToken = null;
@@ -338,4 +392,5 @@
 		});
 	</script>
 </body>
+
 </html>

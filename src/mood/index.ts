@@ -12,6 +12,15 @@ class MoodService {
 			throw new Error("Failed to create mood entry in service layer");
 		}
 	}
+
+	async getMoodEntries(userId: number, page: number, limit: number ) {
+		try {
+			return this.repository.getMoodEntries(userId, page, limit	);
+		} catch (error) {
+			console.error("Error in MoodService getMoodEntries:", error);
+			throw new Error("Failed to get mood entries in service layer");
+		}
+	}
 }
 
 export const moodService = new MoodService();

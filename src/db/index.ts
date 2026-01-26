@@ -2,7 +2,7 @@ import "dotenv/config";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
 import { refreshTokens, userMoods, users } from "./schema.js";
-import { and, eq, gt, sql } from "drizzle-orm";
+import { and, eq, gt, sql, desc } from "drizzle-orm";
 import type { CreateUserData } from "../types/dbTypes.js";
 import type { MoodEntryDTO } from "../types/DTO.js";
 
@@ -167,6 +167,36 @@ class MoodRepository {
 		} catch (error) {
 			console.error("Error creating mood entry:", error);
 			throw new Error("Failed to create mood entry");
+		}
+	}
+
+	async getMoodEntries(userId: number, page = 1, limit = 20) {
+		try {
+			const offset = (page - 1) * limit;
+
+			const countResult = await this.dbClient
+				.select({ count: sql`count(*)`.mapWith(Number) })
+				.from(userMoods)
+				.where(eq(userMoods.userId, userId));
+			const count = countResult[0]?.count ?? 0;
+
+			const data = await this.dbClient
+				.select({ id: userMoods.id, moodId: userMoods.moodId, note: userMoods.note, createdAt: userMoods.createdAt })
+				.from(userMoods)
+				.where(eq(userMoods.userId, userId))
+				.limit(limit)
+				.offset(offset)
+				.orderBy(desc(userMoods.createdAt));
+
+			return {
+				data,
+				total: Number(count),
+				currentPage: page,
+				totalPages: Math.ceil(Number(count) / limit)
+			};
+		} catch (error) {
+			console.error("Error fetching mood entries:", error);
+			throw new Error("Failed to fetch mood entries");
 		}
 	}
 }
