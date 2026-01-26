@@ -1,7 +1,7 @@
 import "dotenv/config";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
-import { refreshTokens, userMoods, users } from "./schema.js";
+import { moods, refreshTokens, userMoods, users } from "./schema.js";
 import { and, eq, gt, sql, desc } from "drizzle-orm";
 import type { CreateUserData } from "../types/dbTypes.js";
 import type { MoodEntryDTO } from "../types/DTO.js";
@@ -181,8 +181,15 @@ class MoodRepository {
 			const count = countResult[0]?.count ?? 0;
 
 			const data = await this.dbClient
-				.select({ id: userMoods.id, moodId: userMoods.moodId, note: userMoods.note, createdAt: userMoods.createdAt })
+				.select({
+					id: userMoods.id,
+					moodId: userMoods.moodId,
+					moodName: moods.name,
+					note: userMoods.note,
+					createdAt: userMoods.createdAt
+				})
 				.from(userMoods)
+				.leftJoin(moods, eq(moods.id, userMoods.moodId))
 				.where(eq(userMoods.userId, userId))
 				.limit(limit)
 				.offset(offset)
