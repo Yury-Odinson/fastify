@@ -83,6 +83,16 @@ class UserRepository {
 		}
 	}
 
+	async findById(id: number) {
+		try {
+			const [user] = await this.dbClient.select().from(users).where(eq(users.id, id)).limit(1);
+			return user;
+		} catch (error) {
+			console.error("Error finding user by id:", error);
+			throw new Error("Failed to find user by id");
+		}
+	}
+
 	async changeUserPassword(userId: number, hashedPassword: string) {
 		try {
 			await this.dbClient

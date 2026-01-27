@@ -1,9 +1,5 @@
-import type { FastifyInstance } from "fastify";
 import { userService } from "../../user/index.js";
-
-type AuthenticatedApp = FastifyInstance & {
-	authenticate: (req: unknown, reply: unknown) => Promise<void>;
-};
+import type { AuthenticatedApp } from "../../types/shared.js";
 
 export const meRoutes = (app: AuthenticatedApp) => {
 	app.get("/api/me", { preHandler: app.authenticate }, async (request) => {
@@ -11,9 +7,9 @@ export const meRoutes = (app: AuthenticatedApp) => {
 			throw app.httpErrors.unauthorized("Unauthorized");
 		}
 
-		const { email } = request.user as { email: string };
+		const { userId } = request.user as { userId: string };
 
-		const userData = await userService.getUserByEmail(email);
+		const userData = await userService.getUserById(Number(userId));
 
 		if (!userData) {
 			throw app.httpErrors.notFound("User not found");

@@ -14,6 +14,15 @@ class UserService {
 		}
 	}
 
+	getUserById(id: number) {
+		try {
+			return this.repository.findById(id);
+		} catch (error) {
+			console.error("Error in UserService getUserById:", error);
+			throw new Error("Failed to get user by id in service layer");
+		}
+	}
+
 	getUsers(page: number, limit: number) {
 		try {
 			return this.repository.getUsers({ page, limit });
