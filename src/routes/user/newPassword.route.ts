@@ -1,7 +1,7 @@
 import type { AuthenticatedApp } from "../../types/shared.js";
 import { userService } from "../../user/index.js";
 
-export const newPasswordRoute = async (app: AuthenticatedApp) => {
+export const newPasswordRoutes = async (app: AuthenticatedApp) => {
 	app.post<{ Body: { newPassword: string } }>("/api/newPassword", { preHandler: app.authenticate }, async (request, reply) => {
 		const { newPassword } = request.body ?? {};
 
@@ -15,7 +15,7 @@ export const newPasswordRoute = async (app: AuthenticatedApp) => {
 		}
 
 		try {
-			await userService.ChangeUserPassword(userId, newPassword);
+			await userService.changeUserPassword(userId, newPassword);
 			return { message: "Password changed successfully" };
 		} catch (error) {
 			console.error("Error in newPasswordRoute:", error);

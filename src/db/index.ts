@@ -83,7 +83,7 @@ class UserRepository {
 		}
 	}
 
-	async ChangeUserPassword(userId: number, hashedPassword: string) {
+	async changeUserPassword(userId: number, hashedPassword: string) {
 		try {
 			await this.dbClient
 				.update(users)
@@ -92,6 +92,18 @@ class UserRepository {
 		} catch (error) {
 			console.error("Error changing user password:", error);
 			throw new Error("Failed to change user password");
+		}
+	}
+
+	async changeUserName(userId: number, newName: string) {
+		try {
+			await this.dbClient
+				.update(users)
+				.set({ name: newName })
+				.where(eq(users.id, userId));
+		} catch (error) {
+			console.error("Error changing user name:", error);
+			throw new Error("Failed to change user name");
 		}
 	}
 }

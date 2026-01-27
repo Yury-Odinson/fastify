@@ -59,15 +59,24 @@ class UserService {
 		return safeUser;
 	}
 
-	async ChangeUserPassword(userId: number, newPassword: string): Promise<void> {
-		
+	async changeUserPassword(userId: number, newPassword: string): Promise<void> {
+
 		const hashedPassword = await this.hashPassword(newPassword);
 
 		try {
-			return this.repository.ChangeUserPassword(userId, hashedPassword);
+			return this.repository.changeUserPassword(userId, hashedPassword);
 		} catch (error) {
 			console.error("Error in UserService ChangeUserPassword:", error);
 			throw new Error("Failed to change user password in service layer");
+		}
+	}
+
+	async changeUserName(userId: number, newName: string): Promise<void> {
+		try {
+			return this.repository.changeUserName(userId, newName);
+		} catch (error) {
+			console.error("Error in UserService ChangeUserName:", error);
+			throw new Error("Failed to change user name in service layer");
 		}
 	}
 
