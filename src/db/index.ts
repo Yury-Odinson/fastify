@@ -4,7 +4,7 @@ import { Pool } from "pg";
 import { moods, refreshTokens, userMoods, users } from "./schema.js";
 import { and, eq, gt, sql, desc } from "drizzle-orm";
 import type { CreateUserData } from "../types/dbTypes.js";
-import type { MoodEntryDTO } from "../types/DTO.js";
+import type { LangDTO, MoodEntryDTO } from "../types/DTO.js";
 
 export class ConflictError extends Error {
 	constructor(message = "Conflict") {
@@ -126,6 +126,18 @@ class UserRepository {
 		} catch (error) {
 			console.error("Error changing user email:", error);
 			throw new Error("Failed to change user email");
+		}
+	}
+
+	async changeUserLang(userId: number, newLang: LangDTO) {
+		try {
+			await this.dbClient
+				.update(users)
+				.set({ lang: newLang })
+				.where(eq(users.id, userId));
+		} catch (error) {
+			console.error("Error changing user language:", error);
+			throw new Error("Failed to change user language");
 		}
 	}
 }

@@ -1,6 +1,6 @@
 import argon2 from "argon2";
 import { ConflictError, userRepository } from "../db/index.js";
-import type { CreateUserDTO } from "../types/DTO.js";
+import type { CreateUserDTO, LangDTO } from "../types/DTO.js";
 
 class UserService {
 	constructor(private readonly repository = userRepository) { }
@@ -95,6 +95,15 @@ class UserService {
 		} catch (error) {
 			console.error("Error in UserService ChangeUserEmail:", error);
 			throw new Error("Failed to change user email in service layer");
+		}
+	}
+
+	async changeUserLang(userId: number, newLang: LangDTO): Promise<void> {
+		try {
+			return this.repository.changeUserLang(userId, newLang);
+		} catch (error) {
+			console.error("Error in UserService ChangeUserLang:", error);
+			throw new Error("Failed to change user language in service layer");
 		}
 	}
 

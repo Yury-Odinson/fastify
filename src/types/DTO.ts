@@ -1,8 +1,10 @@
+export type LangDTO = "en" | "ru";
+
 export type UserDTO = {
 	id: string;
 	name: string;
 	email: string;
-	lang: "en" | "ru";
+	lang: LangDTO;
 };
 
 export type UserListDTO = {
@@ -16,7 +18,7 @@ export type CreateUserDTO = {
 	name: string;
 	email: string;
 	password: string;
-	lang: "en" | "ru";
+	lang: LangDTO;
 };
 
 export type AuthenticateUserDTO = {

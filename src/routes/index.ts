@@ -11,6 +11,7 @@ import { getMoodRoutes } from "./mood/getMood.route.js";
 import { newUserPasswordRoutes } from "./user/newPassword.route.js";
 import { newUserNameRoutes } from "./user/newName.route.js";
 import { newUserEmailRoutes } from "./user/newEmail.route.js";
+import { newUserLangRoutes } from "./user/newLang.route.js";
 
 export const registerRoutes = (app: FastifyInstance) => {
 	registerHealthRoutes(app);
@@ -24,4 +25,5 @@ export const registerRoutes = (app: FastifyInstance) => {
 	newUserPasswordRoutes(app as FastifyInstance & { authenticate: (req: unknown, reply: unknown) => Promise<void> });
 	newUserNameRoutes(app as FastifyInstance & { authenticate: (req: unknown, reply: unknown) => Promise<void> });
 	newUserEmailRoutes(app as FastifyInstance & { authenticate: (req: unknown, reply: unknown) => Promise<void> });
+	newUserLangRoutes(app as FastifyInstance & { authenticate: (req: unknown, reply: unknown) => Promise<void> });
 };

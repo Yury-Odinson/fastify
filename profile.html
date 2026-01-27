@@ -186,6 +186,12 @@
 				<input id="newEmailInput" class="value" type="email" placeholder="New email">
 			</div>
 			<button class="btn-test" id="changeEmailBtn">Change email</button>
+
+			<div class="field">
+				<div class="label">New language</div>
+				<input id="newLangInput" class="value" type="text" placeholder="New language">
+			</div>
+			<button class="btn-test" id="changeLangBtn">Change language</button>
 		</section>
 
 		<section class="section">
@@ -219,6 +225,7 @@
 		const newPasswordEl = document.getElementById("newPasswordInput");
 		const newNameEl = document.getElementById("newNameInput");
 		const newEmailEl = document.getElementById("newEmailInput");
+		const newLangEl = document.getElementById("newLangInput");
 
 		const logMessage = (message) => {
 			const time = new Date().toLocaleTimeString();
@@ -559,6 +566,61 @@
 			}
 		};
 
+		const changeLang = async () => {
+			const newLang = (newLangEl.value || "").trim();
+			if (!newLang) {
+				logMessage("New language is empty.");
+				return;
+			}
+
+			if (!accessToken) {
+				const refreshed = await refreshAccessToken();
+				if (!refreshed) {
+					logMessage("No valid session. Please login again.");
+					return;
+				}
+			}
+
+			const requestChangeLang = async () => {
+				const response = await fetch(`${API_BASE_URL}/api/changeUserLang`, {
+					method: "POST",
+					headers: {
+						"Content-Type": "application/json",
+						Authorization: `Bearer ${accessToken}`,
+					},
+					body: JSON.stringify({ newLang }),
+				});
+				const data = await response.json().catch(async () => {
+					const text = await response.text().catch(() => "");
+					return { raw: text };
+				});
+				return { response, data };
+			};
+
+			try {
+				let { response, data } = await requestChangeLang();
+				logMessage(`POST /api/changeUserLang -> ${response.status}`);
+
+				if (response.status === 401) {
+					const refreshed = await refreshAccessToken();
+					if (refreshed) {
+						({ response, data } = await requestChangeLang());
+						logMessage(`POST /api/changeUserLang (retry) -> ${response.status}`);
+					}
+				}
+
+				if (!response.ok) {
+					logMessage(JSON.stringify(data));
+					return;
+				}
+
+				newLangEl.value = "";
+				logMessage("Language changed.");
+			} catch (error) {
+				logMessage(`Language change failed: ${error}`);
+			}
+		};
+
 		for (let i = 1; i <= 24; i++) {
 			const li = document.createElement("li");
 			const btn = document.createElement("button");
@@ -573,6 +635,7 @@
 		document.getElementById("changePasswordBtn").addEventListener("click", changePassword);
 		document.getElementById("changeNameBtn").addEventListener("click", changeName);
 		document.getElementById("changeEmailBtn").addEventListener("click", changeEmail);
+		document.getElementById("changeLangBtn").addEventListener("click", changeLang);
 
 		document.getElementById("logoutBtn").addEventListener("click", () => {
 			accessToken = null;
