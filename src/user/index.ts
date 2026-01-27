@@ -4,7 +4,7 @@ import type { CreateUserDTO } from "../types/DTO.js";
 
 class UserService {
 	constructor(private readonly repository = userRepository) { }
-	
+
 	getUserByEmail(email: string) {
 		try {
 			return this.repository.findByEmail(email);
@@ -57,6 +57,18 @@ class UserService {
 
 		const { password: _password, ...safeUser } = user;
 		return safeUser;
+	}
+
+	async ChangeUserPassword(userId: number, newPassword: string): Promise<void> {
+		
+		const hashedPassword = await this.hashPassword(newPassword);
+
+		try {
+			return this.repository.ChangeUserPassword(userId, hashedPassword);
+		} catch (error) {
+			console.error("Error in UserService ChangeUserPassword:", error);
+			throw new Error("Failed to change user password in service layer");
+		}
 	}
 
 	private async hashPassword(password: string): Promise<string> {

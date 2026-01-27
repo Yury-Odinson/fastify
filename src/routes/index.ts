@@ -8,6 +8,7 @@ import { refreshTokenRoutes } from "./auth/refresh.route.js";
 import { meRoutes } from "./me/me.route.js";
 import { createMoodRoutes } from "./mood/createMood.route.js";
 import { getMoodRoutes } from "./mood/getMood.route.js";
+import { newPasswordRoute } from "./user/newPassword.route.js";
 
 export const registerRoutes = (app: FastifyInstance) => {
 	registerHealthRoutes(app);
@@ -18,4 +19,5 @@ export const registerRoutes = (app: FastifyInstance) => {
 	meRoutes(app as FastifyInstance & { authenticate: (req: unknown, reply: unknown) => Promise<void> });
 	createMoodRoutes(app as FastifyInstance & { authenticate: (req: unknown, reply: unknown) => Promise<void> });
 	getMoodRoutes(app as FastifyInstance & { authenticate: (req: unknown, reply: unknown) => Promise<void> });
+	newPasswordRoute(app as FastifyInstance & { authenticate: (req: unknown, reply: unknown) => Promise<void> });
 };
