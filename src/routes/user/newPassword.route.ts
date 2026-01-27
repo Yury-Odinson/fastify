@@ -1,8 +1,8 @@
 import type { AuthenticatedApp } from "../../types/shared.js";
 import { userService } from "../../user/index.js";
 
-export const newPasswordRoutes = async (app: AuthenticatedApp) => {
-	app.post<{ Body: { newPassword: string } }>("/api/newPassword", { preHandler: app.authenticate }, async (request, reply) => {
+export const newUserPasswordRoutes = async (app: AuthenticatedApp) => {
+	app.post<{ Body: { newPassword: string } }>("/api/changeUserPassword", { preHandler: app.authenticate }, async (request, reply) => {
 		const { newPassword } = request.body ?? {};
 
 		if (!newPassword) {

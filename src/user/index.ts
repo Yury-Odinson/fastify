@@ -80,6 +80,15 @@ class UserService {
 		}
 	}
 
+	async changeUserEmail(userId: number, newEmail: string): Promise<void> {
+		try {
+			return this.repository.changeUserEmail(userId, newEmail);
+		} catch (error) {
+			console.error("Error in UserService ChangeUserEmail:", error);
+			throw new Error("Failed to change user email in service layer");
+		}
+	}
+
 	private async hashPassword(password: string): Promise<string> {
 		try {
 			return await argon2.hash(password);

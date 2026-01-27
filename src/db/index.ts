@@ -106,6 +106,18 @@ class UserRepository {
 			throw new Error("Failed to change user name");
 		}
 	}
+
+	async changeUserEmail(userId: number, newEmail: string) {
+		try {
+			await this.dbClient
+				.update(users)
+				.set({ email: newEmail })
+				.where(eq(users.id, userId));
+		} catch (error) {
+			console.error("Error changing user email:", error);
+			throw new Error("Failed to change user email");
+		}
+	}
 }
 
 class RefreshTokenRepository {
