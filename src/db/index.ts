@@ -1,10 +1,10 @@
 import "dotenv/config";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
-import { refreshTokens, userMoods, users } from "./schema.js";
-import { and, eq, gt, sql } from "drizzle-orm";
+import { moods, refreshTokens, userMoods, users } from "./schema.js";
+import { and, eq, gt, sql, desc } from "drizzle-orm";
 import type { CreateUserData } from "../types/dbTypes.js";
-import type { MoodEntryDTO } from "../types/DTO.js";
+import type { LangDTO, MoodEntryDTO } from "../types/DTO.js";
 
 export class ConflictError extends Error {
 	constructor(message = "Conflict") {
@@ -80,6 +80,64 @@ class UserRepository {
 		} catch (error) {
 			console.error("Error finding user by email:", error);
 			throw new Error("Failed to find user by email");
+		}
+	}
+
+	async findById(id: number) {
+		try {
+			const [user] = await this.dbClient.select().from(users).where(eq(users.id, id)).limit(1);
+			return user;
+		} catch (error) {
+			console.error("Error finding user by id:", error);
+			throw new Error("Failed to find user by id");
+		}
+	}
+
+	async changeUserPassword(userId: number, hashedPassword: string) {
+		try {
+			await this.dbClient
+				.update(users)
+				.set({ password: hashedPassword })
+				.where(eq(users.id, userId));
+		} catch (error) {
+			console.error("Error changing user password:", error);
+			throw new Error("Failed to change user password");
+		}
+	}
+
+	async changeUserName(userId: number, newName: string) {
+		try {
+			await this.dbClient
+				.update(users)
+				.set({ name: newName })
+				.where(eq(users.id, userId));
+		} catch (error) {
+			console.error("Error changing user name:", error);
+			throw new Error("Failed to change user name");
+		}
+	}
+
+	async changeUserEmail(userId: number, newEmail: string) {
+		try {
+			await this.dbClient
+				.update(users)
+				.set({ email: newEmail })
+				.where(eq(users.id, userId));
+		} catch (error) {
+			console.error("Error changing user email:", error);
+			throw new Error("Failed to change user email");
+		}
+	}
+
+	async changeUserLang(userId: number, newLang: LangDTO) {
+		try {
+			await this.dbClient
+				.update(users)
+				.set({ lang: newLang })
+				.where(eq(users.id, userId));
+		} catch (error) {
+			console.error("Error changing user language:", error);
+			throw new Error("Failed to change user language");
 		}
 	}
 }
@@ -167,6 +225,43 @@ class MoodRepository {
 		} catch (error) {
 			console.error("Error creating mood entry:", error);
 			throw new Error("Failed to create mood entry");
+		}
+	}
+
+	async getMoodEntries(userId: number, page = 1, limit = 20) {
+		try {
+			const offset = (page - 1) * limit;
+
+			const countResult = await this.dbClient
+				.select({ count: sql`count(*)`.mapWith(Number) })
+				.from(userMoods)
+				.where(eq(userMoods.userId, userId));
+			const count = countResult[0]?.count ?? 0;
+
+			const data = await this.dbClient
+				.select({
+					id: userMoods.id,
+					moodId: userMoods.moodId,
+					moodName: moods.name,
+					note: userMoods.note,
+					createdAt: userMoods.createdAt
+				})
+				.from(userMoods)
+				.leftJoin(moods, eq(moods.id, userMoods.moodId))
+				.where(eq(userMoods.userId, userId))
+				.limit(limit)
+				.offset(offset)
+				.orderBy(desc(userMoods.createdAt));
+
+			return {
+				data,
+				total: Number(count),
+				currentPage: page,
+				totalPages: Math.ceil(Number(count) / limit)
+			};
+		} catch (error) {
+			console.error("Error fetching mood entries:", error);
+			throw new Error("Failed to fetch mood entries");
 		}
 	}
 }
