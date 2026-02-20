@@ -360,6 +360,13 @@
         body: JSON.stringify({ name, email, password }),
       });
 
+      if (response.ok) {
+        state.accessToken = body.accessToken ?? null;
+        state.refreshToken = body.refreshToken ?? null;
+        updateTokens();
+        window.location.href = "profile.html";
+      }
+
       log(`REGISTER ${response.status}`, body, !response.ok);
     });
 
