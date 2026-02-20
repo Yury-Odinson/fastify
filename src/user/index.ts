@@ -1,6 +1,7 @@
 import argon2 from "argon2";
 import { ConflictError, userRepository } from "../db/index.js";
 import type { CreateUserDTO, LangDTO } from "../types/DTO.js";
+import { randomBytes } from "crypto";
 
 class UserService {
 	constructor(private readonly repository = userRepository) { }
@@ -34,6 +35,10 @@ class UserService {
 
 	async createUser(userData: CreateUserDTO): Promise<void> {
 		const password = await this.hashPassword(userData.password);
+
+		if (userData.name === "") {
+			userData.name = this.createUserName();
+		}
 
 		if (!userData.lang) {
 			userData.lang = "ru";
@@ -114,6 +119,14 @@ class UserService {
 			console.error("Error hashing password:", error);
 			throw new Error("Failed to hash password");
 		}
+	}
+
+	private createUserName(): string {
+		const array = new Uint8Array(8);
+		crypto.getRandomValues(array);
+		const secureResult = Array.from(array, byte => byte % 10).join("").slice(0, 8);
+
+		return `user-${secureResult}`;
 	}
 }
 
