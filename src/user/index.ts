@@ -1,10 +1,12 @@
 import argon2 from "argon2";
-import { ConflictError, userRepository } from "../db/index.js";
+import { ConflictError, moodRepository, userRepository } from "../db/index.js";
 import type { CreateUserDTO, LangDTO } from "../types/DTO.js";
-import { randomBytes } from "crypto";
 
 class UserService {
-	constructor(private readonly repository = userRepository) { }
+	constructor(
+		private readonly repository = userRepository,
+		private readonly moodsRepository = moodRepository
+	) { }
 
 	getUserByEmail(email: string) {
 		try {
@@ -21,6 +23,24 @@ class UserService {
 		} catch (error) {
 			console.error("Error in UserService getUserById:", error);
 			throw new Error("Failed to get user by id in service layer");
+		}
+	}
+
+	async getUserWithRecentMoods(userId: number, moodsLimit = 5) {
+		try {
+			const [user, recentMoods] = await Promise.all([
+				this.repository.findById(userId),
+				this.moodsRepository.getRecentMoodEntries(userId, moodsLimit)
+			]);
+
+			if (!user) {
+				return null;
+			}
+
+			return { user, recentMoods };
+		} catch (error) {
+			console.error("Error in UserService getUserWithRecentMoods:", error);
+			throw new Error("Failed to get user with recent moods in service layer");
 		}
 	}
 

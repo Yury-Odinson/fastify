@@ -264,6 +264,25 @@ class MoodRepository {
 			throw new Error("Failed to fetch mood entries");
 		}
 	}
+
+	async getRecentMoodEntries(userId: number, limit = 5) {
+		try {
+			return await this.dbClient
+				.select({
+					moodName: moods.name,
+					note: userMoods.note,
+					createdAt: userMoods.createdAt
+				})
+				.from(userMoods)
+				.leftJoin(moods, eq(moods.id, userMoods.moodId))
+				.where(eq(userMoods.userId, userId))
+				.orderBy(desc(userMoods.createdAt))
+				.limit(limit);
+		} catch (error) {
+			console.error("Error fetching recent mood entries:", error);
+			throw new Error("Failed to fetch recent mood entries");
+		}
+	}
 }
 
 export const userRepository = new UserRepository(db);
