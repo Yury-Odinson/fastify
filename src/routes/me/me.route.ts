@@ -8,16 +8,17 @@ export const meRoutes = (app: AuthenticatedApp) => {
 		}
 
 		const { userId } = request.user as { userId: string };
-		const userData = await userService.getUserWithRecentMoods(Number(userId), 5);
-		if (!userData?.user) {
+
+		const userData = await userService.getUserById(Number(userId));
+
+		if (!userData) {
 			throw app.httpErrors.notFound("User not found");
 		}
 
 		return {
-			name: userData.user.name,
-			email: userData.user.email,
-			lang: userData.user.lang,
-			recentMoods: userData.recentMoods,
+			name: userData.name,
+			email: userData.email,
+			lang: userData.lang,
 		};
 	});
 };
