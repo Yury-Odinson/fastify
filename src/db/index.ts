@@ -243,6 +243,7 @@ class MoodRepository {
 					id: userMoods.id,
 					moodId: userMoods.moodId,
 					moodName: moods.name,
+					color: moods.color,
 					note: userMoods.note,
 					createdAt: userMoods.createdAt
 				})

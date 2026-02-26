@@ -14,6 +14,7 @@ export const users = pgTable("users", {
 export const moods = pgTable("moods", {
 	id: serial("id").primaryKey(),
 	name: text("name").notNull(),
+	color: text("color").notNull(),
 	createdAt: timestamp("created_at", { withTimezone: true }).default(sql`now()`),
 	updatedAt: timestamp("updated_at", { withTimezone: true }).default(sql`now()`),
 });
