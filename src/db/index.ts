@@ -124,6 +124,13 @@ class UserRepository {
 				.set({ email: newEmail })
 				.where(eq(users.id, userId));
 		} catch (error) {
+			const pgError = error as { cause?: { code?: string } };
+			const pgCode = pgError?.cause?.code;
+
+			if (pgCode === "23505") {
+				throw new ConflictError("Email already in use");
+			}
+
 			console.error("Error changing user email:", error);
 			throw new Error("Failed to change user email");
 		}

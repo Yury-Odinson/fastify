@@ -1,8 +1,10 @@
 import type { FastifyInstance } from "fastify";
 import { userService } from "../../user/index.js";
-import { ConflictError, refreshTokenRepository } from "../../db/index.js";
+import { refreshTokenRepository } from "../../db/index.js";
 import type { CreateUserDTO } from "../../types/DTO.js";
 import argon2 from "argon2";
+import { AppError } from "../../errors/appError.js";
+import { toHttpError } from "../../errors/toHttpError.js";
 
 export const registrationUserRoutes = (app: FastifyInstance) => {
 	app.post<{ Body: CreateUserDTO }>("/api/registration", async (request, reply) => {
@@ -58,8 +60,8 @@ export const registrationUserRoutes = (app: FastifyInstance) => {
 			return { message: "User created", accessToken };
 
 		} catch (error) {
-			if (error instanceof ConflictError) {
-				throw app.httpErrors.conflict("Email already in use");
+			if (error instanceof AppError) {
+				throw toHttpError(app, error);
 			}
 			throw error;
 		}

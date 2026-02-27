@@ -213,8 +213,15 @@
 	</main>
 
 	<script>
-		const API_BASE_URL = "http://127.0.0.1:4000";
-		let accessToken = null;
+		const STORAGE_KEYS = {
+			apiBaseUrl: "mtApiBaseUrl",
+			accessToken: "mtAccessToken",
+			refreshToken: "mtRefreshToken",
+		};
+		const DEFAULT_API_BASE_URL = "http://10.1.101.38:4000";
+		const API_BASE_URL = (sessionStorage.getItem(STORAGE_KEYS.apiBaseUrl) || DEFAULT_API_BASE_URL).replace(/\/$/, "");
+		let accessToken = sessionStorage.getItem(STORAGE_KEYS.accessToken);
+		let refreshToken = sessionStorage.getItem(STORAGE_KEYS.refreshToken);
 
 		const logEl = document.getElementById("log");
 		const nameEl = document.getElementById("profileName");
@@ -232,12 +239,32 @@
 			logEl.textContent = `[${time}] ${message}\n${logEl.textContent}`;
 		};
 
+		const persistSession = () => {
+			sessionStorage.setItem(STORAGE_KEYS.apiBaseUrl, API_BASE_URL);
+			if (accessToken) {
+				sessionStorage.setItem(STORAGE_KEYS.accessToken, accessToken);
+			} else {
+				sessionStorage.removeItem(STORAGE_KEYS.accessToken);
+			}
+			if (refreshToken) {
+				sessionStorage.setItem(STORAGE_KEYS.refreshToken, refreshToken);
+			} else {
+				sessionStorage.removeItem(STORAGE_KEYS.refreshToken);
+			}
+		};
+
 		const refreshAccessToken = async () => {
+			const headers = { "Content-Type": "application/json" };
+			const body = {};
+			if (refreshToken) {
+				headers["x-client"] = "mobile";
+				body.refreshToken = refreshToken;
+			}
 			const response = await fetch(`${API_BASE_URL}/api/auth/refresh`, {
 				method: "POST",
-				headers: { "Content-Type": "application/json" },
+				headers,
 				credentials: "include",
-				body: JSON.stringify({}),
+				body: JSON.stringify(body),
 			});
 
 			const data = await response.json().catch(async () => {
@@ -252,6 +279,10 @@
 			}
 
 			accessToken = typeof data.accessToken === "string" ? data.accessToken : null;
+			if (typeof data.refreshToken === "string") {
+				refreshToken = data.refreshToken;
+			}
+			persistSession();
 			logMessage(accessToken ? "Access token received." : "Access token missing in refresh response.");
 			return Boolean(accessToken);
 		};
@@ -639,6 +670,8 @@
 
 		document.getElementById("logoutBtn").addEventListener("click", () => {
 			accessToken = null;
+			refreshToken = null;
+			persistSession();
 			logMessage("Logged out. Access token cleared.");
 			window.location.href = "index.html";
 		});
