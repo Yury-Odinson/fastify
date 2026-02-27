@@ -15,7 +15,7 @@ const envSchema = {
     DATABASE_URL: { type: "string", },
 		JWT_SECRET: { type: "string", default: "supersecret" },
 		REFRESH_TOKEN_TTL_DAYS: { type: "number", default: 30 },
-		ACCESS_TOKEN_TTL_MINUTES: { type: "number", default: 1 },
+		ACCESS_TOKEN_TTL_MINUTES: { type: "number", default: 15 },
   },
 };
 
