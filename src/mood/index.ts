@@ -1,5 +1,5 @@
 import { moodRepository } from "../db/index.js";
-import type { MoodEntryDTO } from "../types/DTO.js";
+import type { ImportMoodEntriesResultDTO, ImportMoodEntryDTO, MoodEntryDTO } from "../types/DTO.js";
 import { AppError } from "../errors/appError.js";
 
 class MoodService {
@@ -26,6 +26,40 @@ class MoodService {
 			}
 			console.error("Error in MoodService getMoodEntries:", error);
 			throw new AppError("GET_MOOD_ENTRIES_FAILED", "Failed to get mood entries", 500);
+		}
+	}
+
+	async importMoodEntries(userId: number, entries: ImportMoodEntryDTO[]): Promise<ImportMoodEntriesResultDTO> {
+		try {
+			if (entries.length === 0) {
+				throw new AppError("EMPTY_IMPORT", "Entries list must not be empty", 400);
+			}
+
+			for (const entry of entries) {
+				if (!entry.clientEntryId || !entry.moodId || !entry.createdAt) {
+					throw new AppError("INVALID_IMPORT_ENTRY", "Invalid mood entry payload", 400);
+				}
+
+				const createdAt = new Date(entry.createdAt);
+				if (Number.isNaN(createdAt.getTime())) {
+					throw new AppError("INVALID_IMPORT_DATE", "Invalid createdAt in mood entry", 400);
+				}
+
+				if (entry.updatedAt) {
+					const updatedAt = new Date(entry.updatedAt);
+					if (Number.isNaN(updatedAt.getTime())) {
+						throw new AppError("INVALID_IMPORT_DATE", "Invalid updatedAt in mood entry", 400);
+					}
+				}
+			}
+
+			return this.repository.importMoodEntries({ userId, entries });
+		} catch (error) {
+			if (error instanceof AppError) {
+				throw error;
+			}
+			console.error("Error in MoodService importMoodEntries:", error);
+			throw new AppError("IMPORT_MOOD_ENTRIES_FAILED", "Failed to import mood entries", 500);
 		}
 	}
 }

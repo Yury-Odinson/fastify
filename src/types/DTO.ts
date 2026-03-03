@@ -30,4 +30,18 @@ export type MoodEntryDTO = {
 	userId: number;
 	moodId: number;
 	note?: string | undefined;
+	clientEntryId?: string | undefined;
+};
+
+export type ImportMoodEntryDTO = {
+	clientEntryId: string;
+	moodId: number;
+	note?: string | undefined;
+	createdAt: string;
+	updatedAt?: string | undefined;
+};
+
+export type ImportMoodEntriesResultDTO = {
+	imported: number;
+	skipped: number;
 };

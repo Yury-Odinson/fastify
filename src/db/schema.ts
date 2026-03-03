@@ -1,4 +1,4 @@
-import { pgTable, serial, text, boolean, integer, timestamp, uuid } from "drizzle-orm/pg-core";
+import { pgTable, serial, text, boolean, integer, timestamp, uuid, uniqueIndex } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 
 export const users = pgTable("users", {
@@ -19,14 +19,21 @@ export const moods = pgTable("moods", {
 	updatedAt: timestamp("updated_at", { withTimezone: true }).default(sql`now()`),
 });
 
-export const userMoods = pgTable("user_moods", {
-	id: serial("id").primaryKey(),
-	userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
-	moodId: integer("mood_id").notNull().references(() => moods.id, { onDelete: "cascade" }),
-	note: text("note").default(""),
-	createdAt: timestamp("created_at", { withTimezone: true }).default(sql`now()`),
-	updatedAt: timestamp("updated_at", { withTimezone: true }).default(sql`now()`),
-});
+export const userMoods = pgTable(
+	"user_moods",
+	{
+		id: serial("id").primaryKey(),
+		userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+		moodId: integer("mood_id").notNull().references(() => moods.id, { onDelete: "cascade" }),
+		clientEntryId: text("client_entry_id"),
+		note: text("note").default(""),
+		createdAt: timestamp("created_at", { withTimezone: true }).default(sql`now()`),
+		updatedAt: timestamp("updated_at", { withTimezone: true }).default(sql`now()`),
+	},
+	(table) => ({
+		uniqueUserClientEntry: uniqueIndex("user_moods_user_id_client_entry_id_idx").on(table.userId, table.clientEntryId),
+	})
+);
 
 export const refreshTokens = pgTable("refresh_tokens", {
 	id: uuid("id").defaultRandom().primaryKey(),
