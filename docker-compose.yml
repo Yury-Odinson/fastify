@@ -28,7 +28,7 @@ services:
       - "4000:4000"
     volumes:
       - ./:/app
-    # command: sh -c "bunx tsc -p tsconfig.json && bunx drizzle-kit generate && bunx drizzle-kit migrate && bun src/db/seeds/moods.seed.ts"
+    command: sh -c "bun install && bun run db:generate && bun run db:migrate && bun run db:seed:moods && bun run build && bun run start"
 
 
 volumes:
