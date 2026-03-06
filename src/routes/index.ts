@@ -8,6 +8,7 @@ import { refreshTokenRoutes } from "./auth/refresh.route.js";
 import { meRoutes } from "./me/me.route.js";
 import { createMoodRoutes } from "./mood/createMood.route.js";
 import { getMoodRoutes } from "./mood/getMood.route.js";
+import { importMoodRoutes } from "./mood/importMood.route.js";
 import { newUserPasswordRoutes } from "./user/newPassword.route.js";
 import { newUserNameRoutes } from "./user/newName.route.js";
 import { newUserEmailRoutes } from "./user/newEmail.route.js";
@@ -22,6 +23,7 @@ export const registerRoutes = (app: FastifyInstance) => {
 	meRoutes(app as FastifyInstance & { authenticate: (req: unknown, reply: unknown) => Promise<void> });
 	createMoodRoutes(app as FastifyInstance & { authenticate: (req: unknown, reply: unknown) => Promise<void> });
 	getMoodRoutes(app as FastifyInstance & { authenticate: (req: unknown, reply: unknown) => Promise<void> });
+	importMoodRoutes(app as FastifyInstance & { authenticate: (req: unknown, reply: unknown) => Promise<void> });
 	newUserPasswordRoutes(app as FastifyInstance & { authenticate: (req: unknown, reply: unknown) => Promise<void> });
 	newUserNameRoutes(app as FastifyInstance & { authenticate: (req: unknown, reply: unknown) => Promise<void> });
 	newUserEmailRoutes(app as FastifyInstance & { authenticate: (req: unknown, reply: unknown) => Promise<void> });

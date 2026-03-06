@@ -3,6 +3,8 @@ import type { AuthenticateUserDTO } from "../../types/DTO.js";
 import { userService } from "../../user/index.js";
 import argon2 from "argon2";
 import { refreshTokenRepository } from "../../db/index.js";
+import { AppError } from "../../errors/appError.js";
+import { toHttpError } from "../../errors/toHttpError.js";
 
 export const authenticateUserRoutes = (app: FastifyInstance) => {
 	app.post<{ Body: AuthenticateUserDTO }>("/api/auth", async (request, reply) => {
@@ -48,8 +50,8 @@ export const authenticateUserRoutes = (app: FastifyInstance) => {
 				accessToken
 			}
 		} catch (error) {
-			if (error instanceof Error && error.message === "Invalid credentials") {
-				throw app.httpErrors.unauthorized("Invalid credentials");
+			if (error instanceof AppError) {
+				throw toHttpError(app, error);
 			}
 			throw error;
 		}

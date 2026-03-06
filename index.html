@@ -244,7 +244,7 @@
       <strong>Environment</strong>
       <div class="row">
         <label for="baseUrl">API Base URL</label>
-        <input id="baseUrl" type="text" value="http://127.0.0.1:4000" />
+        <input id="baseUrl" type="text" value="http://10.1.101.38:4000" />
       </div>
     </div>
 
@@ -313,6 +313,34 @@
       accessToken: null,
       refreshToken: null,
     };
+    const STORAGE_KEYS = {
+      apiBaseUrl: "mtApiBaseUrl",
+      accessToken: "mtAccessToken",
+      refreshToken: "mtRefreshToken",
+    };
+
+    const persistSession = () => {
+      sessionStorage.setItem(STORAGE_KEYS.apiBaseUrl, baseUrl());
+      if (state.accessToken) {
+        sessionStorage.setItem(STORAGE_KEYS.accessToken, state.accessToken);
+      } else {
+        sessionStorage.removeItem(STORAGE_KEYS.accessToken);
+      }
+      if (state.refreshToken) {
+        sessionStorage.setItem(STORAGE_KEYS.refreshToken, state.refreshToken);
+      } else {
+        sessionStorage.removeItem(STORAGE_KEYS.refreshToken);
+      }
+    };
+
+    const hydrateSession = () => {
+      const storedBaseUrl = sessionStorage.getItem(STORAGE_KEYS.apiBaseUrl);
+      if (storedBaseUrl) {
+        document.getElementById("baseUrl").value = storedBaseUrl;
+      }
+      state.accessToken = sessionStorage.getItem(STORAGE_KEYS.accessToken);
+      state.refreshToken = sessionStorage.getItem(STORAGE_KEYS.refreshToken);
+    };
 
     const log = (label, payload, isError = false) => {
       const logEl = document.getElementById("log");
@@ -334,6 +362,7 @@
     };
 
     const baseUrl = () => document.getElementById("baseUrl").value.replace(/\/$/, "");
+    const mobileJsonHeaders = () => ({ "Content-Type": "application/json", "x-client": "mobile" });
 
     const apiRequest = async (path, options = {}) => {
       const response = await fetch(`${baseUrl()}${path}`, {
@@ -356,9 +385,17 @@
 
       const { response, body } = await apiRequest("/api/registration", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: mobileJsonHeaders(),
         body: JSON.stringify({ name, email, password }),
       });
+
+      if (response.ok) {
+        state.accessToken = body.accessToken ?? null;
+        state.refreshToken = body.refreshToken ?? null;
+        persistSession();
+        updateTokens();
+        window.location.href = "profile.html";
+      }
 
       log(`REGISTER ${response.status}`, body, !response.ok);
     });
@@ -369,30 +406,33 @@
 
       const { response, body } = await apiRequest("/api/auth", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: mobileJsonHeaders(),
         body: JSON.stringify({ email, password }),
       });
 
       if (response.ok) {
-        state.accessToken = body.accessToken;
+        state.accessToken = body.accessToken ?? null;
         state.refreshToken = body.refreshToken ?? null;
+        persistSession();
         updateTokens();
-				window.location.href = "profile.html";
+        window.location.href = "profile.html";
       }
 
       log(`LOGIN ${response.status}`, body, !response.ok);
     });
 
     document.getElementById("refreshBtn").addEventListener("click", async () => {
+      const refreshPayload = state.refreshToken ? { refreshToken: state.refreshToken } : {};
       const { response, body } = await apiRequest("/api/auth/refresh", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({}),
+        headers: mobileJsonHeaders(),
+        body: JSON.stringify(refreshPayload),
       });
 
       if (response.ok) {
-        state.accessToken = body.accessToken;
+        state.accessToken = body.accessToken ?? null;
         state.refreshToken = body.refreshToken ?? state.refreshToken;
+        persistSession();
         updateTokens();
       }
 
@@ -413,6 +453,7 @@
       log(`GET USERS ${response.status}`, body, !response.ok);
     });
 
+    hydrateSession();
     updateTokens();
   </script>
 </body>

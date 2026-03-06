@@ -4,7 +4,7 @@ import { Pool } from "pg";
 import { moods, refreshTokens, userMoods, users } from "./schema.js";
 import { and, eq, gt, sql, desc } from "drizzle-orm";
 import type { CreateUserData } from "../types/dbTypes.js";
-import type { LangDTO, MoodEntryDTO } from "../types/DTO.js";
+import type { ImportMoodEntriesResultDTO, ImportMoodEntryDTO, LangDTO, MoodEntryDTO } from "../types/DTO.js";
 
 export class ConflictError extends Error {
 	constructor(message = "Conflict") {
@@ -124,6 +124,13 @@ class UserRepository {
 				.set({ email: newEmail })
 				.where(eq(users.id, userId));
 		} catch (error) {
+			const pgError = error as { cause?: { code?: string } };
+			const pgCode = pgError?.cause?.code;
+
+			if (pgCode === "23505") {
+				throw new ConflictError("Email already in use");
+			}
+
 			console.error("Error changing user email:", error);
 			throw new Error("Failed to change user email");
 		}
@@ -220,11 +227,43 @@ class MoodRepository {
 			await this.dbClient.insert(userMoods).values({
 				userId: params.userId,
 				moodId: params.moodId,
+				clientEntryId: params.clientEntryId ?? null,
 				note: params.note ?? "",
 			});
 		} catch (error) {
 			console.error("Error creating mood entry:", error);
 			throw new Error("Failed to create mood entry");
+		}
+	}
+
+	async importMoodEntries(params: { userId: number, entries: ImportMoodEntryDTO[] }): Promise<ImportMoodEntriesResultDTO> {
+		try {
+			if (params.entries.length === 0) {
+				return { imported: 0, skipped: 0 };
+			}
+
+			const values = params.entries.map((entry) => ({
+				userId: params.userId,
+				moodId: entry.moodId,
+				clientEntryId: entry.clientEntryId,
+				note: entry.note ?? "",
+				createdAt: new Date(entry.createdAt),
+				updatedAt: entry.updatedAt ? new Date(entry.updatedAt) : new Date(entry.createdAt),
+			}));
+
+			const insertedRows = await this.dbClient
+				.insert(userMoods)
+				.values(values)
+				.onConflictDoNothing({ target: [userMoods.userId, userMoods.clientEntryId] })
+				.returning({ id: userMoods.id });
+
+			return {
+				imported: insertedRows.length,
+				skipped: values.length - insertedRows.length
+			};
+		} catch (error) {
+			console.error("Error importing mood entries:", error);
+			throw new Error("Failed to import mood entries");
 		}
 	}
 
@@ -241,10 +280,13 @@ class MoodRepository {
 			const data = await this.dbClient
 				.select({
 					id: userMoods.id,
+					clientEntryId: userMoods.clientEntryId,
 					moodId: userMoods.moodId,
 					moodName: moods.name,
+					color: moods.color,
 					note: userMoods.note,
-					createdAt: userMoods.createdAt
+					createdAt: userMoods.createdAt,
+					updatedAt: userMoods.updatedAt
 				})
 				.from(userMoods)
 				.leftJoin(moods, eq(moods.id, userMoods.moodId))

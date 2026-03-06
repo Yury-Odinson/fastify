@@ -1,5 +1,7 @@
 import type { AuthenticatedApp } from "../../types/shared.js";
 import { userService } from "../../user/index.js";
+import { AppError } from "../../errors/appError.js";
+import { toHttpError } from "../../errors/toHttpError.js";
 
 export const newUserPasswordRoutes = async (app: AuthenticatedApp) => {
 	app.post<{ Body: { newPassword: string } }>("/api/changeUserPassword", { preHandler: app.authenticate }, async (request, reply) => {
@@ -18,6 +20,9 @@ export const newUserPasswordRoutes = async (app: AuthenticatedApp) => {
 			await userService.changeUserPassword(userId, newPassword);
 			return { message: "Password changed successfully" };
 		} catch (error) {
+			if (error instanceof AppError) {
+				throw toHttpError(app, error);
+			}
 			console.error("Error in newPasswordRoute:", error);
 			throw app.httpErrors.internalServerError("Failed to change password");
 		}
