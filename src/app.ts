@@ -38,6 +38,7 @@ declare module "fastify" {
 
 export const buildApp = async () => {
   const app = Fastify({
+    trustProxy: true,
     logger: {
       level: "info",
     },

@@ -33,9 +33,70 @@ services:
       db:
         condition: service_healthy
     command: sh -c "bun run db:migrate && bun run db:seed:moods && bun run start"
+  
+  nginx:
+    image: nginx:1.27-alpine
+    restart: unless-stopped
+    environment:
+      SERVER_NAME: ${SERVER_NAME:-localhost}
+    depends_on:
+      app:
+        condition: service_started
     ports:
-      - "4000:4000"
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./docker/nginx/start.sh:/start.sh:ro
+      - ./docker/nginx/templates:/etc/nginx/templates:ro
+      - certbot_www:/var/www/certbot
+      - letsencrypt:/etc/letsencrypt
+    command: ["/bin/sh", "/start.sh"]
+
+  certbot:
+    image: certbot/certbot:latest
+    restart: unless-stopped
+    depends_on:
+      nginx:
+        condition: service_started
+    pid: "service:nginx"
+    volumes:
+      - certbot_www:/var/www/certbot
+      - letsencrypt:/etc/letsencrypt
+    entrypoint: /bin/sh
+    command:
+      - -c
+      - |
+        trap exit TERM
+        while :; do
+          certbot renew --webroot -w /var/www/certbot --quiet --deploy-hook "kill -HUP 1"
+          sleep 12h & wait $${!}
+        done
+
+  certbot-init:
+    image: certbot/certbot:latest
+    profiles:
+      - setup
+    depends_on:
+      nginx:
+        condition: service_started
+    volumes:
+      - certbot_www:/var/www/certbot
+      - letsencrypt:/etc/letsencrypt
+    command:
+      - certonly
+      - --webroot
+      - -w
+      - /var/www/certbot
+      - -d
+      - ${SERVER_NAME:-localhost}
+      - --email
+      - ${CERTBOT_EMAIL:-admin@example.com}
+      - --agree-tos
+      - --no-eff-email
+      - --non-interactive
 
 
 volumes:
   pg_data:
+  certbot_www:
+  letsencrypt:
