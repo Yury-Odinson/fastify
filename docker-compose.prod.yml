@@ -33,7 +33,7 @@ services:
         condition: service_healthy
     command: sh -c "bun run db:migrate && bun run db:seed:moods && bun run start"
     ports:
-      - "127.0.0.1:4000:4000"
+      - "4000:4000"
 
 volumes:
   pg_data:
