@@ -33,6 +33,12 @@ export type MoodEntryDTO = {
 	clientEntryId?: string | undefined;
 };
 
+export type UpdateMoodEntryDTO = {
+	entryId: number;
+	moodId?: number | undefined;
+	note?: string | undefined;
+};
+
 export type ImportMoodEntryDTO = {
 	clientEntryId: string;
 	moodId: number;

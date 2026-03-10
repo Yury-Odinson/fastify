@@ -4,7 +4,13 @@ import { Pool } from "pg";
 import { moods, refreshTokens, userMoods, users } from "./schema.js";
 import { and, eq, gt, sql, desc } from "drizzle-orm";
 import type { CreateUserData } from "../types/dbTypes.js";
-import type { ImportMoodEntriesResultDTO, ImportMoodEntryDTO, LangDTO, MoodEntryDTO } from "../types/DTO.js";
+import type {
+	ImportMoodEntriesResultDTO,
+	ImportMoodEntryDTO,
+	LangDTO,
+	MoodEntryDTO,
+	UpdateMoodEntryDTO
+} from "../types/DTO.js";
 
 export class ConflictError extends Error {
 	constructor(message = "Conflict") {
@@ -304,6 +310,51 @@ class MoodRepository {
 		} catch (error) {
 			console.error("Error fetching mood entries:", error);
 			throw new Error("Failed to fetch mood entries");
+		}
+	}
+
+	async updateMoodEntry(userId: number, params: UpdateMoodEntryDTO): Promise<boolean> {
+		try {
+			const updateData: {
+				updatedAt: Date;
+				moodId?: number;
+				note?: string;
+			} = {
+				updatedAt: new Date()
+			};
+
+			if (params.moodId !== undefined) {
+				updateData.moodId = params.moodId;
+			}
+
+			if (params.note !== undefined) {
+				updateData.note = params.note;
+			}
+
+			const [updatedEntry] = await this.dbClient
+				.update(userMoods)
+				.set(updateData)
+				.where(and(eq(userMoods.userId, userId), eq(userMoods.id, params.entryId)))
+				.returning({ id: userMoods.id });
+
+			return Boolean(updatedEntry);
+		} catch (error) {
+			console.error("Error updating mood entry:", error);
+			throw new Error("Failed to update mood entry");
+		}
+	}
+
+	async deleteMoodEntry(userId: number, entryId: number): Promise<boolean> {
+		try {
+			const [deletedEntry] = await this.dbClient
+				.delete(userMoods)
+				.where(and(eq(userMoods.userId, userId), eq(userMoods.id, entryId)))
+				.returning({ id: userMoods.id });
+
+			return Boolean(deletedEntry);
+		} catch (error) {
+			console.error("Error deleting mood entry:", error);
+			throw new Error("Failed to delete mood entry");
 		}
 	}
 }

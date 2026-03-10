@@ -1,5 +1,10 @@
 import { moodRepository } from "../db/index.js";
-import type { ImportMoodEntriesResultDTO, ImportMoodEntryDTO, MoodEntryDTO } from "../types/DTO.js";
+import type {
+	ImportMoodEntriesResultDTO,
+	ImportMoodEntryDTO,
+	MoodEntryDTO,
+	UpdateMoodEntryDTO
+} from "../types/DTO.js";
 import { AppError } from "../errors/appError.js";
 
 class MoodService {
@@ -60,6 +65,40 @@ class MoodService {
 			}
 			console.error("Error in MoodService importMoodEntries:", error);
 			throw new AppError("IMPORT_MOOD_ENTRIES_FAILED", "Failed to import mood entries", 500);
+		}
+	}
+
+	async updateMoodEntry(userId: number, data: UpdateMoodEntryDTO): Promise<void> {
+		try {
+			if (data.moodId === undefined && data.note === undefined) {
+				throw new AppError("EMPTY_UPDATE_PAYLOAD", "At least one field is required: moodId or note", 400);
+			}
+
+			const isUpdated = await this.repository.updateMoodEntry(userId, data);
+			if (!isUpdated) {
+				throw new AppError("MOOD_ENTRY_NOT_FOUND", "Mood entry not found", 404);
+			}
+		} catch (error) {
+			if (error instanceof AppError) {
+				throw error;
+			}
+			console.error("Error in MoodService updateMoodEntry:", error);
+			throw new AppError("UPDATE_MOOD_ENTRY_FAILED", "Failed to update mood entry", 500);
+		}
+	}
+
+	async deleteMoodEntry(userId: number, entryId: number): Promise<void> {
+		try {
+			const isDeleted = await this.repository.deleteMoodEntry(userId, entryId);
+			if (!isDeleted) {
+				throw new AppError("MOOD_ENTRY_NOT_FOUND", "Mood entry not found", 404);
+			}
+		} catch (error) {
+			if (error instanceof AppError) {
+				throw error;
+			}
+			console.error("Error in MoodService deleteMoodEntry:", error);
+			throw new AppError("DELETE_MOOD_ENTRY_FAILED", "Failed to delete mood entry", 500);
 		}
 	}
 }
