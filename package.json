@@ -7,7 +7,10 @@
     "dev": "bun --watch src/server.ts",
     "lint": "bunx tsc --noEmit",
     "build": "bunx tsc -p tsconfig.json",
-    "start": "bun dist/server.js"
+    "start": "bun dist/server.js",
+    "db:generate": "bunx drizzle-kit generate",
+    "db:migrate": "bunx drizzle-kit migrate",
+    "db:seed:moods": "bun src/db/seeds/moods.seed.ts"
   },
   "dependencies": {
     "@fastify/cookie": "^11.0.2",

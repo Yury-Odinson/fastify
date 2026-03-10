@@ -1,0 +1,102 @@
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-mind_tracker}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    ports:
+      - "127.0.0.1:5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-mind_tracker}"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  app:
+    build:
+      context: .
+    restart: unless-stopped
+    environment:
+      NODE_ENV: ${NODE_ENV:-production}
+      HOST: ${HOST:-0.0.0.0}
+      PORT: ${PORT:-4000}
+      CORS_ORIGINS: ${CORS_ORIGINS:-}
+      JWT_SECRET: ${JWT_SECRET:-supersecret}
+      REFRESH_TOKEN_TTL_DAYS: ${REFRESH_TOKEN_TTL_DAYS:-30}
+      ACCESS_TOKEN_TTL_MINUTES: ${ACCESS_TOKEN_TTL_MINUTES:-15}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@db:5432/${POSTGRES_DB:-mind_tracker}
+    depends_on:
+      db:
+        condition: service_healthy
+    command: sh -c "bun run db:migrate && bun run db:seed:moods && bun run start"
+  
+  nginx:
+    image: nginx:1.27-alpine
+    restart: unless-stopped
+    environment:
+      SERVER_NAME: ${SERVER_NAME:-localhost}
+    depends_on:
+      app:
+        condition: service_started
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./docker/nginx/start.sh:/start.sh:ro
+      - ./docker/nginx/templates:/etc/nginx/templates:ro
+      - certbot_www:/var/www/certbot
+      - letsencrypt:/etc/letsencrypt
+    command: ["/bin/sh", "/start.sh"]
+
+  certbot:
+    image: certbot/certbot:latest
+    restart: unless-stopped
+    depends_on:
+      nginx:
+        condition: service_started
+    pid: "service:nginx"
+    volumes:
+      - certbot_www:/var/www/certbot
+      - letsencrypt:/etc/letsencrypt
+    entrypoint: /bin/sh
+    command:
+      - -c
+      - |
+        trap exit TERM
+        while :; do
+          certbot renew --webroot -w /var/www/certbot --quiet --deploy-hook "kill -HUP 1"
+          sleep 12h & wait $${!}
+        done
+
+  certbot-init:
+    image: certbot/certbot:latest
+    profiles:
+      - setup
+    depends_on:
+      nginx:
+        condition: service_started
+    volumes:
+      - certbot_www:/var/www/certbot
+      - letsencrypt:/etc/letsencrypt
+    command:
+      - certonly
+      - --webroot
+      - -w
+      - /var/www/certbot
+      - -d
+      - ${SERVER_NAME:-localhost}
+      - --email
+      - ${CERTBOT_EMAIL:-admin@example.com}
+      - --agree-tos
+      - --no-eff-email
+      - --non-interactive
+
+
+volumes:
+  pg_data:
+  certbot_www:
+  letsencrypt:
