@@ -1,7 +1,7 @@
 import type { LangDTO } from "../../types/DTO.js";
 import type { AuthenticatedApp } from "../../types/shared.js";
 import { userService } from "../../user/index.js";
-import { isValidLanguage } from "../../utils/languages.js";
+import { isValidLanguage } from "../../utils/validations.js";
 import { AppError } from "../../errors/appError.js";
 import { toHttpError } from "../../errors/toHttpError.js";
 

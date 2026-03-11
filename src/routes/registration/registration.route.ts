@@ -5,6 +5,7 @@ import type { CreateUserDTO } from "../../types/DTO.js";
 import argon2 from "argon2";
 import { AppError } from "../../errors/appError.js";
 import { toHttpError } from "../../errors/toHttpError.js";
+import { isValidEmail, isValidLanguage, isValidPassword } from "../../utils/validations.js";
 
 export const registrationUserRoutes = (app: FastifyInstance) => {
 	app.post<{ Body: CreateUserDTO }>("/api/registration", async (request, reply) => {
@@ -15,9 +16,20 @@ export const registrationUserRoutes = (app: FastifyInstance) => {
 			throw app.httpErrors.badRequest("Missing required fields: email, or password");
 		};
 
-		try {
-			const normalizedEmail = email.toLowerCase().trim();
+		const normalizedEmail = email.toLowerCase().trim();
+		if (!isValidEmail(normalizedEmail)) {
+			throw app.httpErrors.badRequest("Invalid email format");
+		}
 
+		if (!isValidPassword(password)) {
+			throw app.httpErrors.badRequest("Password must be at least 8 characters");
+		}
+
+		if (lang && !isValidLanguage(lang)) {
+			throw app.httpErrors.badRequest("Invalid language");
+		}
+
+		try {
 			await userService.createUser({
 				name,
 				email: normalizedEmail,

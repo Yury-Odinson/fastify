@@ -2,6 +2,7 @@ import type { AuthenticatedApp } from "../../types/shared.js";
 import { userService } from "../../user/index.js";
 import { AppError } from "../../errors/appError.js";
 import { toHttpError } from "../../errors/toHttpError.js";
+import { isValidPassword } from "../../utils/validations.js";
 
 export const newUserPasswordRoutes = async (app: AuthenticatedApp) => {
 	app.post<{ Body: { newPassword: string } }>("/api/changeUserPassword", { preHandler: app.authenticate }, async (request, reply) => {
@@ -9,6 +10,10 @@ export const newUserPasswordRoutes = async (app: AuthenticatedApp) => {
 
 		if (!newPassword) {
 			throw app.httpErrors.badRequest("Missing required field: newPassword");
+		}
+
+		if (!isValidPassword(newPassword)) {
+			throw app.httpErrors.badRequest("Password must be at least 8 characters");
 		}
 
 		const userId = (request.user as { userId?: number } | undefined)?.userId;

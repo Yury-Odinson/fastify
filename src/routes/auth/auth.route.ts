@@ -5,24 +5,37 @@ import argon2 from "argon2";
 import { refreshTokenRepository } from "../../db/index.js";
 import { AppError } from "../../errors/appError.js";
 import { toHttpError } from "../../errors/toHttpError.js";
+import { isValidEmail, isValidPassword } from "../../utils/validations.js";
 
 export const authenticateUserRoutes = (app: FastifyInstance) => {
 	app.post<{ Body: AuthenticateUserDTO }>("/api/auth", async (request, reply) => {
 
 		try {
 
-			const { email, password } = request.body;
+			const { email, password } = request.body ?? {};
+			if (!email || !password) {
+				throw app.httpErrors.badRequest("Missing required fields: email, or password");
+			}
 
-			const userData = await userService.authenticateUser(email, password);
+			const normalizedEmail = email.toLowerCase().trim();
+			if (!isValidEmail(normalizedEmail)) {
+				throw app.httpErrors.badRequest("Invalid email format");
+			}
+
+			if (!isValidPassword(password)) {
+				throw app.httpErrors.badRequest("Password must be at least 8 characters");
+			}
+
+			const userData = await userService.authenticateUser(normalizedEmail, password);
 
 			const client = request.headers["x-client"] || "web";
 
 			const accessToken = app.jwt.sign(
-				{ email, userId: userData.id },
+				{ email: normalizedEmail, userId: userData.id },
 				{ expiresIn: `${app.config.ACCESS_TOKEN_TTL_MINUTES}m` }
 			);
 
-			const refreshToken = app.jwt.sign({ email }, { expiresIn: `${app.config.REFRESH_TOKEN_TTL_DAYS}d` });
+			const refreshToken = app.jwt.sign({ email: normalizedEmail }, { expiresIn: `${app.config.REFRESH_TOKEN_TTL_DAYS}d` });
 
 			const hashedRefreshToken = await argon2.hash(refreshToken);
 
