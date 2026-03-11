@@ -8,6 +8,9 @@
     "lint": "bunx tsc --noEmit",
     "build": "bunx tsc -p tsconfig.json",
     "start": "bun dist/server.js",
+    "docker:local:up": "docker compose -f docker-compose.local.yml up -d --build",
+    "docker:local:down": "docker compose -f docker-compose.local.yml down",
+    "docker:local:logs": "docker compose -f docker-compose.local.yml logs -f app",
     "db:generate": "bunx drizzle-kit generate",
     "db:migrate": "bunx drizzle-kit migrate",
     "db:seed:moods": "bun src/db/seeds/moods.seed.ts"

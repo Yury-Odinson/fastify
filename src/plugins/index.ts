@@ -27,6 +27,8 @@ export const registerPlugins = async (app: FastifyInstance) => {
   app.register(cors, {
     origin: corsOrigins.length ? corsOrigins : true,
     credentials: true,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization", "x-client"],
   });
 
   app.register(helmet, {

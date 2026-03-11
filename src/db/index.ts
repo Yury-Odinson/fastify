@@ -153,6 +153,20 @@ class UserRepository {
 			throw new Error("Failed to change user language");
 		}
 	}
+
+	async deleteUser(userId: number): Promise<boolean> {
+		try {
+			const [deletedUser] = await this.dbClient
+				.delete(users)
+				.where(eq(users.id, userId))
+				.returning({ id: users.id });
+
+			return Boolean(deletedUser);
+		} catch (error) {
+			console.error("Error deleting user:", error);
+			throw new Error("Failed to delete user");
+		}
+	}
 }
 
 class RefreshTokenRepository {

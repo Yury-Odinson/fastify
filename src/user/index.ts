@@ -160,6 +160,22 @@ class UserService {
 		}
 	}
 
+	async deleteUser(userId: number): Promise<void> {
+		try {
+			const isDeleted = await this.repository.deleteUser(userId);
+
+			if (!isDeleted) {
+				throw new AppError("USER_NOT_FOUND", "User not found", 404);
+			}
+		} catch (error) {
+			if (error instanceof AppError) {
+				throw error;
+			}
+			console.error("Error in UserService deleteUser:", error);
+			throw new AppError("DELETE_USER_FAILED", "Failed to delete user", 500);
+		}
+	}
+
 	private async hashPassword(password: string): Promise<string> {
 		try {
 			return await argon2.hash(password);

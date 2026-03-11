@@ -14,6 +14,7 @@ import { newUserPasswordRoutes } from "./user/newPassword.route.js";
 import { newUserNameRoutes } from "./user/newName.route.js";
 import { newUserEmailRoutes } from "./user/newEmail.route.js";
 import { newUserLangRoutes } from "./user/newLang.route.js";
+import { deleteUserRoutes } from "./user/deleteUser.route.js";
 
 export const registerRoutes = (app: FastifyInstance) => {
 	registerHealthRoutes(app);
@@ -30,4 +31,5 @@ export const registerRoutes = (app: FastifyInstance) => {
 	newUserNameRoutes(app as FastifyInstance & { authenticate: (req: unknown, reply: unknown) => Promise<void> });
 	newUserEmailRoutes(app as FastifyInstance & { authenticate: (req: unknown, reply: unknown) => Promise<void> });
 	newUserLangRoutes(app as FastifyInstance & { authenticate: (req: unknown, reply: unknown) => Promise<void> });
+	deleteUserRoutes(app as FastifyInstance & { authenticate: (req: unknown, reply: unknown) => Promise<void> });
 };
