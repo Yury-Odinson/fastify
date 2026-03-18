@@ -1,2 +1,2 @@
 test CI/CD
-v6
+v7
