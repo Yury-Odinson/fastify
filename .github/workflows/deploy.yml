@@ -17,25 +17,29 @@ jobs:
           port: ${{ secrets.DEPLOY_PORT }}
           script_stop: true
           script: |
-            set -e
+            set -eu
             BRANCH="${{ github.ref_name }}"
+            TARGET_SHA="${{ github.sha }}"
+
+            echo "host=$(hostname)"
+            echo "user=$(whoami)"
+            echo "branch=$BRANCH"
+            echo "target_sha=$TARGET_SHA"
 
             cd ${{ secrets.DEPLOY_PATH }}
+            echo "path=$(pwd)"
+            echo "before_head=$(git rev-parse --short HEAD)"
+
             git fetch origin "$BRANCH"
             git pull --ff-only origin "$BRANCH"
 
-            if [ ! -f .env ]; then
-              cp .env.example .env
-              echo ".env was missing, created from .env.example"
+            CURRENT_SHA="$(git rev-parse HEAD)"
+            echo "after_head=${CURRENT_SHA}"
+
+            if [ "$CURRENT_SHA" != "$TARGET_SHA" ]; then
+              echo "ERROR: server HEAD does not match workflow commit"
+              exit 1
             fi
 
             docker compose up -d --build --remove-orphans
             docker compose ps -a
-
-            for svc in db app nginx; do
-              if ! docker compose ps --status running --services | grep -qx "$svc"; then
-                echo "Service '$svc' is not running, printing logs..."
-                docker compose logs --tail=150 "$svc" || true
-                exit 1
-              fi
-            done
