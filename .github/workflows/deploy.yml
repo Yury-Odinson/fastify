@@ -1,14 +1,35 @@
-name: Deploy
+name: Deploy Probe
 
 on:
   push:
     branches: [master]
+  workflow_dispatch:
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    # если secrets в Environment (например production), раскомментируйте:
+    # environment: production
+
     steps:
-      - name: Deploy via SSH
+      - name: Check secrets presence
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_PORT: ${{ secrets.DEPLOY_PORT }}
+          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+        run: |
+          set -e
+          for v in DEPLOY_HOST DEPLOY_USER DEPLOY_PORT DEPLOY_PATH DEPLOY_SSH_KEY; do
+            if [ -z "${!v}" ]; then
+              echo "::error::$v is empty"
+              exit 1
+            fi
+            echo "$v=present"
+          done
+
+      - name: SSH probe
         uses: appleboy/ssh-action@v1.2.0
         with:
           host: ${{ secrets.DEPLOY_HOST }}
@@ -16,30 +37,15 @@ jobs:
           key: ${{ secrets.DEPLOY_SSH_KEY }}
           port: ${{ secrets.DEPLOY_PORT }}
           script_stop: true
+          debug: true
           script: |
-            set -eu
-            BRANCH="${{ github.ref_name }}"
-            TARGET_SHA="${{ github.sha }}"
-
-            echo "host=$(hostname)"
-            echo "user=$(whoami)"
-            echo "branch=$BRANCH"
-            echo "target_sha=$TARGET_SHA"
-
-            cd ${{ secrets.DEPLOY_PATH }}
-            echo "path=$(pwd)"
-            echo "before_head=$(git rev-parse --short HEAD)"
-
-            git fetch origin "$BRANCH"
-            git pull --ff-only origin "$BRANCH"
-
-            CURRENT_SHA="$(git rev-parse HEAD)"
-            echo "after_head=${CURRENT_SHA}"
-
-            if [ "$CURRENT_SHA" != "$TARGET_SHA" ]; then
-              echo "ERROR: server HEAD does not match workflow commit"
-              exit 1
-            fi
-
-            docker compose up -d --build --remove-orphans
-            docker compose ps -a
+            set -eux
+            hostname
+            whoami
+            cd "${{ secrets.DEPLOY_PATH }}"
+            test -d .git
+            git rev-parse --short HEAD
+            git fetch origin master
+            git rev-parse --short origin/master
+            git pull --ff-only origin master
+            git rev-parse --short HEAD
